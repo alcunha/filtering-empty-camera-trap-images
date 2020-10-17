@@ -129,6 +129,7 @@ def resize_images(input_images_dir, output_images_dir):
 
   dataset = tf.data.Dataset.from_tensor_slices((image_list, output_image_list))
   dataset = dataset.map(_map_fn, num_parallel_calls=AUTOTUNE)
+  dataset = dataset.apply(tf.data.experimental.ignore_errors())
 
   for input_image, _ in dataset.take(len(image_list)):
     logging.info("resizing %s" % input_image.numpy())
