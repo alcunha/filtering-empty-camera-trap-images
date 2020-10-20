@@ -43,7 +43,8 @@ class CSVInputProcessor:
     dataset = dataset.map(_load_image, num_parallel_calls=AUTOTUNE)
 
     def _preprocess_image(image, label):
-      image = preprocessing.preprocess_image(image)
+      image = preprocessing.preprocess_image(image,
+                                            output_size=self.output_size)
 
       return image, label
 

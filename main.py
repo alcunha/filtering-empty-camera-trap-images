@@ -42,7 +42,7 @@ def main(_):
   dataset = build_input_data(FLAGS.training_csv_file, is_training=True)
 
   for image, label in dataset.take(1):
-    print(image.numpy().shape())
+    print(image.numpy().shape)
     print(label.numpy())
 
 if __name__ == '__main__':
