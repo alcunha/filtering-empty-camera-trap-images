@@ -36,15 +36,18 @@ class CSVInputProcessor:
 
     def _load_image(file_name, label):
       image = tf.io.read_file(self.data_dir + file_name)
-      image = tf.image.decode_jpeg(image, channels=3)
+      image = tf.io.decode_jpeg(image, channels=3)
 
       return image, label
-    
+
     dataset = dataset.map(_load_image, num_parallel_calls=AUTOTUNE)
 
     def _preprocess_image(image, label):
       image = preprocessing.preprocess_image(image,
-                                            output_size=self.output_size)
+                                    output_size=self.output_size,
+                                    is_training=self.is_training,
+                                    randaug_num_layers=self.randaug_num_layers,
+                                    randaug_magnitude=self.randaug_magnitude)
 
       return image, label
 

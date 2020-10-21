@@ -16,21 +16,14 @@
 
 RandAugment Reference: https://arxiv.org/abs/1909.13719
 '''
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import inspect
 import math
 import tensorflow as tf
 from tensorflow_addons import image as contrib_image
-from absl import flags
 
 # This signifies the max integer that the controller RNN could predict for the
 # augmentation scheme.
 _MAX_LEVEL = 10.
-
-FLAGS = flags.FLAGS
 
 
 def blend(image1, image2, factor):
@@ -530,10 +523,7 @@ def distort_image_with_randaugment(image, num_layers, magnitude,
   available_ops = [
       'AutoContrast', 'Equalize', 'Invert', 'Rotate', 'Posterize',
       'Solarize', 'Color', 'Contrast', 'Brightness', 'Sharpness',
-      'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'SolarizeAdd']
-#   if FLAGS.cutout_op:
-  available_ops += ['Cutout']
-  tf.compat.v1.logging.info('available ops {}'.format(str(available_ops)))
+      'ShearX', 'ShearY', 'TranslateX', 'TranslateY', 'Cutout', 'SolarizeAdd']
 
   for layer_num in range(num_layers):
     op_to_select = tf.random.uniform(
