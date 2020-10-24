@@ -25,6 +25,9 @@ class CSVInputProcessor:
 
   def make_source_dataset(self):
     csv_data = pd.read_csv(self.csv_file)
+    num_instances = len(csv_data)
+    num_classes = len(csv_data.category.unique())
+
     dataset = tf.data.Dataset.from_tensor_slices((
       csv_data.file_name,
       csv_data.category
@@ -37,6 +40,7 @@ class CSVInputProcessor:
     def _load_image(file_name, label):
       image = tf.io.read_file(self.data_dir + file_name)
       image = tf.io.decode_jpeg(image, channels=3)
+      label = tf.one_hot(label, num_classes)
 
       return image, label
 
@@ -56,4 +60,4 @@ class CSVInputProcessor:
     dataset = dataset.prefetch(buffer_size=AUTOTUNE)
     dataset = dataset.batch(self.batch_size, drop_remainder=True)
 
-    return dataset
+    return dataset, num_instances, num_classes
