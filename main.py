@@ -3,6 +3,7 @@ from absl import flags
 
 import dataloader
 import model_builder
+import train_image_classifier
 import utils
 
 flags.DEFINE_string(
@@ -73,6 +74,16 @@ def get_model(num_classes):
 
   return model
 
+def train_model(model, train_data_and_size, val_data_and_size):
+  history = train_image_classifier.train_model(
+    model,
+    train_image_classifier.get_default_hparams(),
+    train_data_and_size,
+    val_data_and_size
+  )
+
+  return history
+
 def main(_):
   if FLAGS.training_csv_file is None:
     raise RuntimeError('Must specify --training_csv_file for train.')
@@ -103,6 +114,14 @@ def main(_):
   print(num_classes)
 
   model.summary()
+
+  history = train_model(
+    model,
+    train_data_and_size=(dataset, num_instances),
+    val_data_and_size=(dataset, num_instances)
+  )
+
+  print(history)
 
 if __name__ == '__main__':
   app.run(main)

@@ -14,7 +14,8 @@ class CSVInputProcessor:
               is_training=False,
               output_size=224,
               randaug_num_layers=None,
-              randaug_magnitude=None):
+              randaug_magnitude=None,
+              use_fake_data=False):
     self.csv_file = csv_file
     self.data_dir = data_dir
     self.batch_size = batch_size
@@ -22,6 +23,7 @@ class CSVInputProcessor:
     self.output_size = output_size
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
+    self.use_fake_data = use_fake_data
 
   def make_source_dataset(self):
     csv_data = pd.read_csv(self.csv_file)
@@ -59,5 +61,8 @@ class CSVInputProcessor:
 
     dataset = dataset.prefetch(buffer_size=AUTOTUNE)
     dataset = dataset.batch(self.batch_size, drop_remainder=True)
+
+    if self.use_fake_data:
+      dataset.take(1).repeat()
 
     return dataset, num_instances, num_classes
