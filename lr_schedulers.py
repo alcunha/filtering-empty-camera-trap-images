@@ -41,7 +41,7 @@ class CosineDecayWithLinearWarmUpScheduler(tf.keras.callbacks.Callback):
       raise ValueError('Optimizer must have a "lr" attribute.')
 
     self.steps = self.steps + 1
-    
+
     if self.steps < self.warmup_steps:
       lr = lr_linear_warmup(
               self.initial_learning_rate,
@@ -53,7 +53,7 @@ class CosineDecayWithLinearWarmUpScheduler(tf.keras.callbacks.Callback):
               self.steps - self.warmup_steps,
               self.decay_steps,
               self.alpha)
-    
+
     tf.keras.backend.set_value(self.model.optimizer.lr, lr)
-    
+
     self.learning_rates.append(lr)

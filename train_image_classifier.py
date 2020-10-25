@@ -1,3 +1,4 @@
+import os
 import collections
 
 import tensorflow as tf
@@ -22,7 +23,7 @@ def get_default_hparams():
     momentum=0,
     use_label_smoothing=False,
     use_logits=False,
-    model_dir='/tmp/ckp/'
+    model_dir='/tmp/models/'
   )
 
 def generate_optimizer(hparams):
@@ -55,7 +56,26 @@ def train_model(model, hparams, train_data_and_size, val_data_and_size):
   steps_per_epoch = train_size // hparams.batch_size
   validation_steps = val_size // hparams.batch_size
 
-  callbacks = []
+  summary_dir = os.path.join(hparams.model_dir, "summaries")
+  summary_callback = tf.keras.callbacks.TensorBoard(summary_dir)
+
+  checkpoint_filepath = os.path.join(hparams.model_dir, "ckp")
+  checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+      filepath=checkpoint_filepath,
+      save_weights_only=True,
+      save_freq='epoch')
+
+  callbacks = [summary_callback, checkpoint_callback]
+
+  if val_data is not None:
+    best_model_filepath = os.path.join(hparams.model_dir, 'best_model', 'ckp')
+    best_model_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath=best_model_filepath,
+        save_weights_only=True,
+        monitor='val_accuracy',
+        mode='max',
+        save_best_only=True)
+    callbacks.append(best_model_callback)
 
   if hparams.use_cosine_decay:
     callbacks.append(generate_lr_scheduler(hparams, steps_per_epoch))

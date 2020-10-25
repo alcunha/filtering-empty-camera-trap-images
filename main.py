@@ -45,7 +45,7 @@ flags.DEFINE_string(
     help=('Model name of the archtecture'))
 
 flags.DEFINE_string(
-    'model_dir', default='/tmp/ckp/',
+    'model_dir', default='/tmp/models/',
     help=('Location of the model checkpoint files'))
 
 flags.DEFINE_integer(
