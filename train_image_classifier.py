@@ -51,8 +51,8 @@ def train_model(model, hparams, train_data_and_size, val_data_and_size):
   train_data, train_size = train_data_and_size
   val_data, val_size = val_data_and_size
 
-  steps_per_epoch = train_size // hparams.epochs
-  validation_steps = val_size // hparams.epochs
+  steps_per_epoch = train_size // hparams.batch_size
+  validation_steps = val_size // hparams.batch_size
 
   callbacks = []
 

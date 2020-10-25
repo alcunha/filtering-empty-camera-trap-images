@@ -101,24 +101,26 @@ def main(_):
     is_training=True
   )
 
+  if FLAGS.validation_csv_file is not None:
+    val_dataset, val_num_instances, _ = build_input_data(
+      FLAGS.validation_csv_file,
+      is_training=False
+    )
+  else:
+    val_dataset = None
+    val_num_instances = 0
+
   if FLAGS.num_classes is not None:
     num_classes = FLAGS.num_classes
 
   model = get_model(num_classes)
-
-  for image, label in dataset.take(1):
-    print(image.numpy().shape)
-    print(label.numpy())
-
-  print(num_instances)
-  print(num_classes)
 
   model.summary()
 
   history = train_model(
     model,
     train_data_and_size=(dataset, num_instances),
-    val_data_and_size=(dataset, num_instances)
+    val_data_and_size=(val_dataset, val_num_instances)
   )
 
   print(history)
