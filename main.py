@@ -74,7 +74,7 @@ flags.DEFINE_bool(
 )
 
 flags.DEFINE_float(
-    'warmup_epochs', default=1.5,
+    'warmup_epochs', default=0.3,
     help=('Duration of warmp of learning rate in epochs. It can be a'
           ' fractionary value as long will be converted to steps.')
 )

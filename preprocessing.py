@@ -73,6 +73,7 @@ def preprocess_for_train(image,
 
 def preporocess_for_eval(image, output_size):
 
+  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
   image = tf.image.resize(image, size=(output_size, output_size))
   image = normalize_image(image)
 
