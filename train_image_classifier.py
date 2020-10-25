@@ -7,21 +7,22 @@ import lr_schedulers
 class HParams(
   collections.namedtuple("HParams", [
     'lr', 'use_cosine_decay', 'warmup_steps', 'epochs', 'batch_size',
-    'momentum', 'use_label_smoothing', 'use_logits'
+    'momentum', 'use_label_smoothing', 'use_logits', 'model_dir'
   ])):
   """ The hyperparams for training a model
   """
 
 def get_default_hparams():
   return HParams(
-    lr=0.001,
+    lr=0.01,
     use_cosine_decay=False,
     warmup_steps=500,
     epochs=10,
     batch_size=32,
     momentum=0,
     use_label_smoothing=False,
-    use_logits=False
+    use_logits=False,
+    model_dir='/tmp/ckp/'
   )
 
 def generate_optimizer(hparams):

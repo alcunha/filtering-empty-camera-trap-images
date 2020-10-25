@@ -52,7 +52,7 @@ class CosineDecayWithLinearWarmUpScheduler(tf.keras.callbacks.Callback):
               self.initial_learning_rate,
               self.steps - self.warmup_steps,
               self.decay_steps,
-              alpha)
+              self.alpha)
     
     tf.keras.backend.set_value(self.model.optimizer.lr, lr)
     

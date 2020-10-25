@@ -20,34 +20,69 @@ flags.DEFINE_string(
     help=('Path to images dataset base directory'))
 
 flags.DEFINE_integer(
-        'input_size', default=224,
-        help=('Input size of the model'))
+    'input_size', default=224,
+    help=('Input size of the model'))
+
+flags.DEFINE_bool(
+    'use_label_smoothing', default=False,
+    help=('Apply Label Smoothing to the labels during training')
+)
 
 flags.DEFINE_integer(
-        'batch_size', default=32,
-        help=('Batch size used during training.'))
+    'batch_size', default=32,
+    help=('Batch size used during training.'))
 
 flags.DEFINE_integer(
-        'randaug_num_layers', default=None,
-        help=('Number of operations to be applied by Randaugment'))
+    'randaug_num_layers', default=None,
+    help=('Number of operations to be applied by Randaugment'))
 
 flags.DEFINE_integer(
-        'randaug_magnitude', default=None,
-        help=('Magnitude for operations on Randaugment.'))
+    'randaug_magnitude', default=None,
+    help=('Magnitude for operations on Randaugment.'))
 
 flags.DEFINE_string(
     'model_name', default='efficientnet-b0',
     help=('Model name of the archtecture'))
 
+flags.DEFINE_string(
+    'model_dir', default='/tmp/ckp/',
+    help=('Location of the model checkpoint files'))
 
 flags.DEFINE_integer(
     'num_classes', default=None,
     help=('Number of classes to train the model on. If not passed, it will be'
            'inferred from data'))
 
+flags.DEFINE_float(
+    'lr', default=0.01,
+    help=('Initial learning rate')
+)
+
+flags.DEFINE_float(
+    'momentum', default=0,
+    help=('Momentum for SGD optimizer')
+)
+
 flags.DEFINE_bool(
-    'use_label_smoothing', default=False,
-    help=('Use Label Smoothing during training'))
+    'use_scaled_lr', default=True,
+    help=('Scale the initial learning rate by batch size')
+)
+
+flags.DEFINE_bool(
+    'use_cosine_decay', default=True,
+    help=('Apply cosine decay during training')
+)
+
+flags.DEFINE_float(
+    'warmup_epochs', default=1.5,
+    help=('Duration of warmp of learning rate in epochs. It can be a'
+          ' fractionary value as long will be converted to steps.')
+)
+
+flags.DEFINE_integer(
+    'epochs', default=10,
+    help=('Number of epochs to training for')
+)
 
 FLAGS = flags.FLAGS
 
@@ -75,9 +110,30 @@ def get_model(num_classes):
   return model
 
 def train_model(model, train_data_and_size, val_data_and_size):
+
+  if FLAGS.use_scaled_lr:
+    lr = FLAGS.lr * FLAGS.batch_size / 256
+  else:
+    lr = FLAGS.lr
+
+  _, train_size = train_data_and_size
+  warmup_steps = int(FLAGS.warmup_epochs * (train_size // FLAGS.batch_size))
+
+  hparams = train_image_classifier.get_default_hparams()
+  hparams = hparams._replace(
+    lr=lr,
+    momentum=FLAGS.momentum,
+    epochs=FLAGS.epochs,
+    warmup_steps=warmup_steps,
+    use_cosine_decay=FLAGS.use_cosine_decay,
+    batch_size=FLAGS.batch_size,
+    model_dir=FLAGS.model_dir,
+    use_label_smoothing=FLAGS.use_label_smoothing
+  )
+
   history = train_image_classifier.train_model(
     model,
-    train_image_classifier.get_default_hparams(),
+    hparams,
     train_data_and_size,
     val_data_and_size
   )
@@ -90,6 +146,9 @@ def main(_):
 
   if FLAGS.dataset_base_dir is None:
     raise RuntimeError('Must specify --dataset_base_dir for train.')
+
+  if FLAGS.model_dir is None:
+    raise RuntimeError('Must specify --model_dir for train.')
 
   if utils.xor(FLAGS.randaug_num_layers is None,
                FLAGS.randaug_magnitude is None):
