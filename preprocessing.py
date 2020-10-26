@@ -1,6 +1,14 @@
+from absl import flags
+
 import tensorflow as tf
 
 import randaugment
+
+flags.DEFINE_bool(
+    'normalize_input', default=True,
+    help=('Normalize inputs using ImageNet mean and std'))
+
+FLAGS = flags.FLAGS
 
 def random_crop(image,
                 aspect_ratio_range=[0.75, 1.33],
@@ -51,14 +59,19 @@ def normalize_image(image):
 
   return image
 
+def resize_image(image, output_size):
+  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+  image = tf.image.resize(image, size=(output_size, output_size))
+
+  return image
+
 def preprocess_for_train(image,
                         output_size,
                         randaug_num_layers=None,
                         randaug_magnitude=None):
 
   image = random_crop(image)
-  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-  image = tf.image.resize(image, size=(output_size, output_size))
+  image = resize_image(image, output_size)
   image = flip(image)
 
   if randaug_num_layers is not None and randaug_magnitude is not None:
@@ -67,15 +80,17 @@ def preprocess_for_train(image,
                                                        randaug_num_layers,
                                                        randaug_magnitude)
 
-  image = normalize_image(image)
+  if FLAGS.normalize_input:
+    image = normalize_image(image)
 
   return image
 
 def preporocess_for_eval(image, output_size):
 
-  image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-  image = tf.image.resize(image, size=(output_size, output_size))
-  image = normalize_image(image)
+  image = resize_image(image, output_size)
+  
+  if FLAGS.normalize_input:
+    image = normalize_image(image)
 
   return image
 
