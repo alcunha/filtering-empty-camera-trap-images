@@ -3,10 +3,17 @@ from absl import flags
 import tensorflow as tf
 
 import randaugment
+import simpleaugment
 
 flags.DEFINE_bool(
     'normalize_input', default=True,
     help=('Normalize inputs using ImageNet mean and std'))
+
+flags.DEFINE_bool(
+    'use_simple_augment', default=False,
+    help=('Use simple data augmentation with random hue, saturation, '
+          ' brightness, and rotation. If Randaugment parameters is used, this'
+          ' options is ignored.'))
 
 FLAGS = flags.FLAGS
 
@@ -79,16 +86,19 @@ def preprocess_for_train(image,
     image = randaugment.distort_image_with_randaugment(image,
                                                        randaug_num_layers,
                                                        randaug_magnitude)
+  else:
+    if FLAGS.use_simple_augment:
+      image = simpleaugment.distort_image_with_simpleaugment(image)
 
   if FLAGS.normalize_input:
     image = normalize_image(image)
 
   return image
 
-def preporocess_for_eval(image, output_size):
+def preprocess_for_eval(image, output_size):
 
   image = resize_image(image, output_size)
-  
+
   if FLAGS.normalize_input:
     image = normalize_image(image)
 
@@ -106,4 +116,4 @@ def preprocess_image(image,
                                 randaug_num_layers,
                                 randaug_magnitude)
   else:
-    return preporocess_for_eval(image, output_size)
+    return preprocess_for_eval(image, output_size)

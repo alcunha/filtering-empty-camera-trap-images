@@ -182,7 +182,5 @@ def main(_):
     val_data_and_size=(val_dataset, val_num_instances)
   )
 
-  print(history)
-
 if __name__ == '__main__':
   app.run(main)
