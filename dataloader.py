@@ -15,7 +15,8 @@ class CSVInputProcessor:
               output_size=224,
               randaug_num_layers=None,
               randaug_magnitude=None,
-              use_fake_data=False):
+              use_fake_data=False,
+              seed=None):
     self.csv_file = csv_file
     self.data_dir = data_dir
     self.batch_size = batch_size
@@ -24,6 +25,7 @@ class CSVInputProcessor:
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
     self.use_fake_data = use_fake_data
+    self.seed = seed
 
   def make_source_dataset(self):
     csv_data = pd.read_csv(self.csv_file)
@@ -36,7 +38,7 @@ class CSVInputProcessor:
     ))
 
     if self.is_training:
-      dataset = dataset.shuffle(len(csv_data))
+      dataset = dataset.shuffle(len(csv_data), seed=self.seed)
       dataset = dataset.repeat()
 
     def _load_image(file_name, label):

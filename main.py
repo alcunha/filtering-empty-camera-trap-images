@@ -1,10 +1,16 @@
+import random
+
 from absl import app
 from absl import flags
+
+import tensorflow as tf
 
 import dataloader
 import model_builder
 import train_image_classifier
 import utils
+
+FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
     'training_csv_file', default=None,
@@ -84,7 +90,11 @@ flags.DEFINE_integer(
     help=('Number of epochs to training for')
 )
 
-FLAGS = flags.FLAGS
+if 'random_seed' not in list(FLAGS):
+  flags.DEFINE_integer(
+      'random_seed', default=42,
+      help=('Random seed for reproductible experiments')
+  )
 
 
 def build_input_data(csv_file, is_training=False):
@@ -95,7 +105,8 @@ def build_input_data(csv_file, is_training=False):
     is_training=is_training,
     output_size=FLAGS.input_size,
     randaug_num_layers=FLAGS.randaug_num_layers,
-    randaug_magnitude=FLAGS.randaug_magnitude
+    randaug_magnitude=FLAGS.randaug_magnitude,
+    seed=FLAGS.random_seed,
   )
 
   return input_data.make_source_dataset()
@@ -140,6 +151,10 @@ def train_model(model, train_data_and_size, val_data_and_size):
 
   return history
 
+def set_random_seeds():
+  random.seed(FLAGS.random_seed)
+  tf.random.set_seed(FLAGS.random_seed)
+
 def main(_):
   if FLAGS.training_csv_file is None:
     raise RuntimeError('Must specify --training_csv_file for train.')
@@ -154,6 +169,8 @@ def main(_):
                FLAGS.randaug_magnitude is None):
     raise RuntimeError('To apply Randaugment during training you must specify'
                        ' both --randaug_num_layers and --randaug_magnitude')
+
+  set_random_seeds()     
 
   dataset, num_instances, num_classes = build_input_data(
     FLAGS.training_csv_file,

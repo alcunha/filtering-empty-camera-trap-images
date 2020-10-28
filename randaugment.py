@@ -20,11 +20,20 @@ import inspect
 import math
 import tensorflow as tf
 from tensorflow_addons import image as contrib_image
+from absl import flags
+
 
 # This signifies the max integer that the controller RNN could predict for the
 # augmentation scheme.
 _MAX_LEVEL = 10.
 
+FLAGS = flags.FLAGS
+
+if 'random_seed' not in list(FLAGS):
+  flags.DEFINE_integer(
+      'random_seed', default=42,
+      help=('Random seed for reproductible experiments')
+  )
 
 def blend(image1, image2, factor):
   '''Blend image1 and image2 using 'factor'.
@@ -94,11 +103,11 @@ def cutout(image, pad_size, replace=0):
   # Sample the center location in the image where the zero mask will be applied.
   cutout_center_height = tf.random.uniform(
       shape=[], minval=0, maxval=image_height,
-      dtype=tf.int32)
+      dtype=tf.int32, seed=FLAGS.random_seed)
 
   cutout_center_width = tf.random.uniform(
       shape=[], minval=0, maxval=image_width,
-      dtype=tf.int32)
+      dtype=tf.int32, seed=FLAGS.random_seed)
 
   lower_pad = tf.maximum(0, cutout_center_height - pad_size)
   upper_pad = tf.maximum(0, image_height - cutout_center_height - pad_size)
@@ -413,7 +422,8 @@ NAME_TO_FUNC = {
 
 def _randomly_negate_tensor(tensor):
   '''With 50% prob turn the tensor negative.'''
-  should_flip = tf.cast(tf.floor(tf.random.uniform([]) + 0.5), tf.bool)
+  should_flip = tf.cast(tf.floor(tf.random.uniform(
+                                  [], seed=FLAGS.random_seed) + 0.5), tf.bool)
   final_tensor = tf.cond(should_flip, lambda: tensor, lambda: -tensor)
   return final_tensor
 
@@ -527,11 +537,12 @@ def distort_image_with_randaugment(image, num_layers, magnitude,
 
   for layer_num in range(num_layers):
     op_to_select = tf.random.uniform(
-        [], maxval=len(available_ops), dtype=tf.int32)
+        [], maxval=len(available_ops), dtype=tf.int32, seed=FLAGS.random_seed)
     random_magnitude = float(magnitude)
     with tf.name_scope('randaug_layer_{}'.format(layer_num)):
       for (i, op_name) in enumerate(available_ops):
-        prob = tf.random.uniform([], minval=0.2, maxval=0.8, dtype=tf.float32)
+        prob = tf.random.uniform(
+          [], minval=0.2, maxval=0.8, dtype=tf.float32, seed=FLAGS.random_seed)
         func, _, args = _parse_policy_info(op_name, prob, random_magnitude,
                                            replace_value, augmentation_hparams)
         image = tf.cond(
