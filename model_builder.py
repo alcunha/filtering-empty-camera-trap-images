@@ -24,6 +24,11 @@ efficientnet_b0_spec = get_default_specs()._replace(
   input_size=224
 )
 
+efficientnet_b4_spec = get_default_specs()._replace(
+  uri='https://tfhub.dev/tensorflow/efficientnet/b4/feature-vector/1',
+  input_size=380
+)
+
 efficientnet_lite0_spec = get_default_specs()._replace(
   uri='https://tfhub.dev/tensorflow/efficientnet/lite0/feature-vector/2',
   input_size=224
@@ -31,6 +36,7 @@ efficientnet_lite0_spec = get_default_specs()._replace(
 
 MODELS_SPECS = {
   'efficientnet-b0': efficientnet_b0_spec,
+  'efficientnet-b4': efficientnet_b4_spec,
   'efficientnet-lite0': efficientnet_lite0_spec,
 }
 
