@@ -170,7 +170,7 @@ def main(_):
     raise RuntimeError('To apply Randaugment during training you must specify'
                        ' both --randaug_num_layers and --randaug_magnitude')
 
-  set_random_seeds()     
+  set_random_seeds()
 
   dataset, num_instances, num_classes = build_input_data(
     FLAGS.training_csv_file,

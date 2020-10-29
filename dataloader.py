@@ -13,6 +13,7 @@ class CSVInputProcessor:
               batch_size,
               is_training=False,
               output_size=224,
+              num_classes=None,
               randaug_num_layers=None,
               randaug_magnitude=None,
               use_fake_data=False,
@@ -22,6 +23,7 @@ class CSVInputProcessor:
     self.batch_size = batch_size
     self.is_training = is_training
     self.output_size = output_size
+    self.num_classes = num_classes
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
     self.use_fake_data = use_fake_data
@@ -30,7 +32,8 @@ class CSVInputProcessor:
   def make_source_dataset(self):
     csv_data = pd.read_csv(self.csv_file)
     num_instances = len(csv_data)
-    num_classes = len(csv_data.category.unique())
+    if self.num_classes is None:
+      self.num_classes = len(csv_data.category.unique())
 
     dataset = tf.data.Dataset.from_tensor_slices((
       csv_data.file_name,
@@ -44,7 +47,7 @@ class CSVInputProcessor:
     def _load_image(file_name, label):
       image = tf.io.read_file(self.data_dir + file_name)
       image = tf.io.decode_jpeg(image, channels=3)
-      label = tf.one_hot(label, num_classes)
+      label = tf.one_hot(label, self.num_classes)
 
       return image, label
 
@@ -67,4 +70,4 @@ class CSVInputProcessor:
     if self.use_fake_data:
       dataset.take(1).repeat()
 
-    return dataset, num_instances, num_classes
+    return dataset, num_instances, self.num_classes
