@@ -96,6 +96,8 @@ def preprocess_for_train(image,
 
   if FLAGS.normalize_input:
     image = normalize_image(image)
+  else:
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
   return image
 
@@ -105,6 +107,8 @@ def preprocess_for_eval(image, output_size):
 
   if FLAGS.normalize_input:
     image = normalize_image(image)
+  else:
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
   return image
 
