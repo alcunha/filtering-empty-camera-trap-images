@@ -47,7 +47,9 @@ class CosineDecayWithLinearWarmUpScheduler(tf.keras.callbacks.Callback):
               self.initial_learning_rate,
               self.steps,
               self.warmup_steps)
-    else:            
+    elif self.initial_learning_rate == self.alpha:
+      lr = self.initial_learning_rate
+    else:
       lr = lr_cosine_decay(
               self.initial_learning_rate,
               self.steps - self.warmup_steps,

@@ -40,10 +40,16 @@ def generate_loss_fn(hparams):
   return loss_fn
 
 def generate_lr_scheduler(hparams, steps_per_epoch):
+  if hparams.use_cosine_decay:
+    alpha = 0.0
+  else:
+    alpha = hparams.lr
+
   scheduler = lr_schedulers.CosineDecayWithLinearWarmUpScheduler(
     initial_learning_rate=hparams.lr,
     decay_steps=hparams.epochs*steps_per_epoch,
     warmup_steps=hparams.warmup_steps,
+    alpha=alpha
   )
 
   return scheduler
@@ -77,7 +83,7 @@ def train_model(model, hparams, train_data_and_size, val_data_and_size):
         save_best_only=True)
     callbacks.append(best_model_callback)
 
-  if hparams.use_cosine_decay:
+  if hparams.use_cosine_decay or hparams.warmup_steps > 0:
     callbacks.append(generate_lr_scheduler(hparams, steps_per_epoch))
 
   optimizer = generate_optimizer(hparams)
