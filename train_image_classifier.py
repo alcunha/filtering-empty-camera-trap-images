@@ -20,7 +20,7 @@ def get_default_hparams():
     warmup_steps=500,
     epochs=10,
     batch_size=32,
-    momentum=0,
+    momentum=0.0,
     use_label_smoothing=False,
     use_logits=False,
     model_dir='/tmp/models/'
