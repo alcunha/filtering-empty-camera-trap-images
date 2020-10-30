@@ -28,12 +28,14 @@ class CSVInputProcessor:
     self.randaug_magnitude = randaug_magnitude
     self.use_fake_data = use_fake_data
     self.seed = seed
+    self.labels = None
 
   def make_source_dataset(self):
     csv_data = pd.read_csv(self.csv_file)
     num_instances = len(csv_data)
     if self.num_classes is None:
       self.num_classes = len(csv_data.category.unique())
+    self.labels = csv_data.category.to_numpy()
 
     dataset = tf.data.Dataset.from_tensor_slices((
       csv_data.file_name,

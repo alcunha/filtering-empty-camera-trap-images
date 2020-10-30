@@ -2,6 +2,7 @@ import os
 
 from absl import app
 from absl import flags
+from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 import numpy as np
 
 import dataloader
@@ -49,7 +50,9 @@ def build_input_data(csv_file):
     num_classes=FLAGS.num_classes,
   )
 
-  return input_data.make_source_dataset()
+  dataset, num_instances, _ = input_data.make_source_dataset()
+
+  return dataset, num_instances, input_data.labels
 
 def _generate_fake_instance():
   instance_shape = (FLAGS.input_size, FLAGS.input_size, 3)
@@ -89,6 +92,14 @@ def load_model():
 
   return model
 
+def eval_model(model, dataset, num_instances, labels):
+  predictions = model.predict(dataset, steps=num_instances)
+  predictions = np.argmax(predictions, axis=1)
+
+  conf_matrix = confusion_matrix(labels, predictions)
+
+  return conf_matrix
+
 def main(_):
   if FLAGS.validation_csv_file is None:
     raise RuntimeError('Must specify --validation_csv_file for evaluation.')
@@ -102,8 +113,11 @@ def main(_):
   if FLAGS.dataset_base_dir is None:
     raise RuntimeError('Must specify --dataset_base_dir for evaluation.')
 
-  dataset, num_instances, _ = build_input_data(FLAGS.validation_csv_file)
+  dataset, num_instances, labels = build_input_data(FLAGS.validation_csv_file)
   model = load_model()
+
+  conf_matrix = eval_model(model, dataset, num_instances, labels)
+  print(conf_matrix)
 
 if __name__ == '__main__':
   app.run(main)
