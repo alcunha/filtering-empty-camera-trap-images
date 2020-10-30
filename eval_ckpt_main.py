@@ -2,6 +2,7 @@ import os
 
 from absl import app
 from absl import flags
+import numpy as np
 
 import dataloader
 import model_builder
@@ -50,8 +51,24 @@ def build_input_data(csv_file):
 
   return input_data.make_source_dataset()
 
+def _generate_fake_instance():
+  instance_shape = (FLAGS.input_size, FLAGS.input_size, 3)
+  fake_instance = np.ones(instance_shape, dtype=np.float32)
+  fake_labels = np.ones((FLAGS.num_classes,))
+
+  return fake_instance, fake_labels
+
+def _initialize_model_optimizer(model):
+  fake_steps = 2
+  fake_instance, fake_labels = _generate_fake_instance()
+  x = np.array([fake_instance for i in range(fake_steps)])
+  y = np.array([fake_labels for i in range(fake_steps)])
+
+  model.fit(
+    x, y, batch_size=FLAGS.batch_size, epochs=1, steps_per_epoch=fake_steps)
+
 # dataset is required only to force load optimizer checkpoints
-def load_model(dataset):
+def load_model():
   model = model_builder.create(
     model_name=FLAGS.model_name,
     num_classes=FLAGS.num_classes,
@@ -64,9 +81,10 @@ def load_model(dataset):
   model.compile(optimizer=optimizer, loss=loss_fn, metrics=['accuracy'])
 
   # workaround to fix 'Unresolved object in checkpoint' for optimizer variables
-  model.fit(dataset, epochs=1, steps_per_epoch=2)
+  _initialize_model_optimizer(model)
+
   checkpoint_path = os.path.join(FLAGS.ckpt_dir, "ckp")
-  
+
   model.load_weights(checkpoint_path)
 
   return model
@@ -85,7 +103,7 @@ def main(_):
     raise RuntimeError('Must specify --dataset_base_dir for evaluation.')
 
   dataset, num_instances, _ = build_input_data(FLAGS.validation_csv_file)
-  model = load_model(dataset)
+  model = load_model()
 
 if __name__ == '__main__':
   app.run(main)
