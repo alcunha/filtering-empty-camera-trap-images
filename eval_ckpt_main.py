@@ -97,8 +97,9 @@ def eval_model(model, dataset, num_instances, labels):
   predictions = np.argmax(predictions, axis=1)
 
   conf_matrix = confusion_matrix(labels, predictions)
+  precision_recall = precision_recall_fscore_support(labels, predictions)
 
-  return conf_matrix
+  return conf_matrix, precision_recall
 
 def main(_):
   if FLAGS.validation_csv_file is None:
@@ -116,8 +117,10 @@ def main(_):
   dataset, num_instances, labels = build_input_data(FLAGS.validation_csv_file)
   model = load_model()
 
-  conf_matrix = eval_model(model, dataset, num_instances, labels)
+  conf_matrix, precision_recall = eval_model(
+                                    model, dataset, num_instances, labels)
   print(conf_matrix)
+  print(precision_recall)
 
 if __name__ == '__main__':
   app.run(main)
