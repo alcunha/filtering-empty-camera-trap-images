@@ -13,8 +13,18 @@ from object_detection.utils import label_map_util
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-      'train_annotations_file', default=None,
+      'images_file', default=None,
+      help=('Json file containing all images')
+)
+
+flags.DEFINE_string(
+      'annotations_file', default=None,
       help=('Json file containing bbox annotations in COCO format')
+)
+
+flags.DEFINE_string(
+      'splits_file', default=None,
+      help=('Json file containing dataset spliting')
 )
 
 flags.DEFINE_string(
@@ -41,7 +51,9 @@ flags.DEFINE_string(
     help=('Path to label map proto')
 )
 
-flags.mark_flag_as_required('train_annotations_file')
+flags.mark_flag_as_required('images_file')
+flags.mark_flag_as_required('annotations_file')
+flags.mark_flag_as_required('splits_file')
 flags.mark_flag_as_required('dataset_base_dir')
 flags.mark_flag_as_required('label_map_path')
 
@@ -61,7 +73,7 @@ def create_tf_example(image,
                       images_resized=True):
   num_annotations_skipped = 0
   num_empty_annotations_skipped = 0
-  filename = image['file_name']
+  filename = image['file_name'].split('/')[-1]
   image_id = image['id']
 
   image_path = os.path.join(dataset_base_dir, filename)
@@ -127,46 +139,94 @@ def create_tf_example(image,
       'image/object/class/label': dataset_util.int64_list_feature(classes),
   }))
 
-  return tf_example, num_annotations_skipped
+  return tf_example, num_annotations_skipped, num_empty_annotations_skipped
 
-def create_tf_record_from_json_file(json_file_name,
-                                    dataset_base_dir,
-                                    label_map_path):
-  with contextlib2.ExitStack() as tf_record_close_stack, \
-      tf.io.gfile.GFile(json_file_name, 'r') as json_file:
-
-    json_data = json.load(json_file)
-    images = json_data['images']
-    annotations = json_data['annotations']
-    category_index = label_map_util.create_category_index_from_labelmap(
-        label_map_path)
-    original_category_index = label_map_util.create_category_index(
-        json_data['categories'])
-
-    annotations_index = {}
-    for annotation in annotations:
-      image_id = annotation['image_id']
-      if image_id not in annotations_index:
-        annotations_index[image_id] = []
-      annotations_index[image_id].append(annotation)
-
+def create_tf_record_from_images_list(images,
+                                      annotations_index,
+                                      dataset_base_dir,
+                                      category_index,
+                                      original_category_index):
+  with contextlib2.ExitStack() as tf_record_close_stack:
     for image in images:
       image_id = image['id']
       if image_id not in annotations_index:
         annotations_index[image_id] = []
-      tf_example, _ = create_tf_example(image,
+      tf_example, _, _ = create_tf_example(image,
                                         dataset_base_dir,
                                         annotations_index[image_id],
                                         category_index,
                                         original_category_index)
 
+def _get_caltech_splits_by_location(caltech_splits_file):
+  with tf.io.gfile.GFile(caltech_splits_file, 'r') as json_file:
+    json_data = json.load(json_file)
+
+  locations_map = { loc: split for split, locations in json_data.items()
+                               for loc in locations}
+
+  return locations_map
+
+def _get_caltech_images_by_split(caltech_images_file, caltech_splits_file):
+  with tf.io.gfile.GFile(caltech_images_file, 'r') as json_file:
+    json_data = json.load(json_file)
+  all_caltech_images = json_data['images']
+
+  locations_map = _get_caltech_splits_by_location(caltech_splits_file)
+
+  images_per_split = {}
+  for image in all_caltech_images:
+    split = locations_map[image['location']]
+    if split not in images_per_split:
+      images_per_split[split] = []
+    images_per_split[split].append(image)
+
+  return images_per_split
+
+def _get_caltech_annotations_index(caltech_annotations_file):
+  with tf.io.gfile.GFile(caltech_annotations_file, 'r') as json_file:
+    json_data = json.load(json_file)
+  annotations = json_data['annotations']
+  original_category_index = label_map_util.create_category_index(
+        json_data['categories'])
+
+  annotations_index = {}
+  for annotation in annotations:
+    image_id = annotation['image_id']
+    if image_id not in annotations_index:
+      annotations_index[image_id] = []
+    annotations_index[image_id].append(annotation)
+
+  return annotations_index, original_category_index
+
+def _create_caltech_tf_record_splits(caltech_images_file,
+                                     caltech_annotations_file,
+                                     caltech_splits_file,
+                                     dataset_base_dir,
+                                     label_map_path):
+
+  images_per_split = _get_caltech_images_by_split(caltech_images_file,
+                                                  caltech_splits_file)
+  (annot_index, origin_cat_index) = _get_caltech_annotations_index(
+              caltech_annotations_file)
+  category_index = label_map_util.create_category_index_from_labelmap(
+        label_map_path)
+
+  for split, images in images_per_split.items():
+    create_tf_record_from_images_list(images,
+                                      annot_index,
+                                      dataset_base_dir,
+                                      category_index,
+                                      origin_cat_index)
+
 def main(_):
   if FLAGS.label_type=='species':
     raise RuntimeError('species option for flag --label_type not implemented')
 
-  create_tf_record_from_json_file(FLAGS.train_annotations_file,
-                                  FLAGS.dataset_base_dir,
-                                  FLAGS.label_map_path)
+  _create_caltech_tf_record_splits(FLAGS.images_file,
+                                   FLAGS.annotations_file,
+                                   FLAGS.splits_file,
+                                   FLAGS.dataset_base_dir,
+                                   FLAGS.label_map_path)
 
 if __name__ == '__main__':
   app.run(main)
