@@ -7,6 +7,7 @@ from absl import app
 from absl import flags
 import tensorflow as tf
 
+from object_detection.dataset_tools import tf_record_creation_util
 from object_detection.utils import dataset_util
 from object_detection.utils import label_map_util
 
@@ -31,6 +32,11 @@ flags.DEFINE_string(
     'dataset_base_dir', default=None,
     help=('Path to images dataset base directory'))
 
+flags.DEFINE_string(
+    'output_dir', default=None,
+    help=('Path where tfrecords will be saved on')
+)
+
 flags.DEFINE_enum(
     'label_type', default='empty', enum_values=['empty', 'species'],
     help=('Whether the model uses empty/nonempty (empty) or species labels'))
@@ -51,11 +57,17 @@ flags.DEFINE_string(
     help=('Path to label map proto')
 )
 
+flags.DEFINE_integer(
+    'images_per_shard', default=800,
+    help=('Number of images per shard')
+)
+
 flags.mark_flag_as_required('images_file')
 flags.mark_flag_as_required('annotations_file')
 flags.mark_flag_as_required('splits_file')
 flags.mark_flag_as_required('dataset_base_dir')
 flags.mark_flag_as_required('label_map_path')
+flags.mark_flag_as_required('output_dir')
 
 def _get_image_dimensions_from_file(image_path):
   image = tf.io.read_file(image_path)
@@ -145,17 +157,36 @@ def create_tf_record_from_images_list(images,
                                       annotations_index,
                                       dataset_base_dir,
                                       category_index,
-                                      original_category_index):
+                                      original_category_index,
+                                      output_path):
+  num_shards = 1 + (len(images) // FLAGS.images_per_shard)
+  total_annot_skipped = 0
+  total_empty_annot_skipped = 0
+
   with contextlib2.ExitStack() as tf_record_close_stack:
-    for image in images:
+    output_tfrecords = tf_record_creation_util.open_sharded_output_tfrecords(
+        tf_record_close_stack, output_path, num_shards)
+
+    for index, image in enumerate(images):
       image_id = image['id']
       if image_id not in annotations_index:
         annotations_index[image_id] = []
-      tf_example, _, _ = create_tf_example(image,
+      tf_example, annot_skipped, empty_annot_skipped = create_tf_example(
+                                        image,
                                         dataset_base_dir,
                                         annotations_index[image_id],
                                         category_index,
                                         original_category_index)
+      total_annot_skipped += annot_skipped
+      total_empty_annot_skipped += empty_annot_skipped
+
+      output_shard_index = index % num_shards
+      output_tfrecords[output_shard_index].write(tf_example.SerializeToString())
+
+    tf.compat.v1.logging.info('Finished writing, skipped %d bboxes.',
+                               total_annot_skipped)
+    tf.compat.v1.logging.info('Skipped %d bboxes on empty images.', 
+                              total_empty_annot_skipped)
 
 def _get_caltech_splits_by_location(caltech_splits_file):
   with tf.io.gfile.GFile(caltech_splits_file, 'r') as json_file:
@@ -202,7 +233,8 @@ def _create_caltech_tf_record_splits(caltech_images_file,
                                      caltech_annotations_file,
                                      caltech_splits_file,
                                      dataset_base_dir,
-                                     label_map_path):
+                                     label_map_path,
+                                     output_path):
 
   images_per_split = _get_caltech_images_by_split(caltech_images_file,
                                                   caltech_splits_file)
@@ -212,11 +244,14 @@ def _create_caltech_tf_record_splits(caltech_images_file,
         label_map_path)
 
   for split, images in images_per_split.items():
+    tf.compat.v1.logging.info('Started writing %s split.', split)
+    tfrecord_path = os.path.join(output_path, 'caltech_%s.record' % split)
     create_tf_record_from_images_list(images,
                                       annot_index,
                                       dataset_base_dir,
                                       category_index,
-                                      origin_cat_index)
+                                      origin_cat_index,
+                                      tfrecord_path)
 
 def main(_):
   if FLAGS.label_type=='species':
@@ -226,7 +261,8 @@ def main(_):
                                    FLAGS.annotations_file,
                                    FLAGS.splits_file,
                                    FLAGS.dataset_base_dir,
-                                   FLAGS.label_map_path)
+                                   FLAGS.label_map_path,
+                                   FLAGS.output_dir)
 
 if __name__ == '__main__':
   app.run(main)
