@@ -4,6 +4,7 @@ from absl import app
 from absl import flags
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 import numpy as np
+import tensorflow as tf
 
 import dataloader
 import model_builder
@@ -12,13 +13,14 @@ import train_image_classifier
 FLAGS = flags.FLAGS
 
 flags.DEFINE_string(
-    'validation_csv_file', default=None,
-    help=('CSV file containing the list of images for evaluation'
-          ' (CSV file must have two columns: filename and category id)'))
+    'validation_files', default=None,
+    help=('A file pattern for TFRecord files OR a CSV file containing the list'
+          ' of images for evaluation (CSV file must have two columns: filename'
+          ' and category id)'))
 
 flags.DEFINE_string(
     'dataset_base_dir', default=None,
-    help=('Path to images dataset base directory'))
+    help=('Path to images dataset base directory when using a CSV file'))
 
 flags.DEFINE_integer(
     'input_size', default=224,
@@ -40,19 +42,37 @@ flags.DEFINE_integer(
     'num_classes', default=None,
     help=('Number of classes'))
 
-def build_input_data(csv_file):
-  input_data = dataloader.CSVInputProcessor(
-    csv_file=csv_file,
-    data_dir=FLAGS.dataset_base_dir,
-    batch_size=FLAGS.batch_size,
-    is_training=False,
-    output_size=FLAGS.input_size,
-    num_classes=FLAGS.num_classes,
-  )
+flags.mark_flag_as_required('validation_files')
+flags.mark_flag_as_required('ckpt_dir')
+flags.mark_flag_as_required('num_classes')
 
-  dataset, num_instances, _ = input_data.make_source_dataset()
+def build_input_data():
+  if FLAGS.validation_files.endswith('.csv'):
+    if FLAGS.dataset_base_dir is None:
+      raise RuntimeError('To use CSV files as input, you must specify'
+                         ' --dataset_base_dir')
 
-  return dataset, num_instances, input_data.labels
+    input_data = dataloader.CSVInputProcessor(
+      csv_file=FLAGS.validation_files,
+      data_dir=FLAGS.dataset_base_dir,
+      batch_size=FLAGS.batch_size,
+      is_training=False,
+      output_size=FLAGS.input_size,
+      num_classes=FLAGS.num_classes,
+    )
+  else:
+    input_data = dataloader.TFRecordWBBoxInputProcessor(
+      file_pattern=FLAGS.validation_files,
+      batch_size=FLAGS.batch_size,
+      is_training=False,
+      output_size=FLAGS.input_size,
+      num_classes=FLAGS.num_classes,
+      num_instances=0
+    )
+
+  dataset, _, _ = input_data.make_source_dataset()
+
+  return dataset
 
 def _generate_fake_instance():
   instance_shape = (FLAGS.input_size, FLAGS.input_size, 3)
@@ -92,9 +112,25 @@ def load_model():
 
   return model
 
-def eval_model(model, dataset, num_instances, labels):
-  predictions = model.predict(dataset, steps=num_instances)
-  predictions = np.argmax(predictions, axis=1)
+def _decode_one_hot(one_hot_tensor):
+  return tf.argmax(one_hot_tensor).numpy()
+
+def predict_binary_classifier(model, dataset):
+
+  labels = []
+  predictions = []
+  detection_confidence = []
+
+  for batch, label in dataset:
+    prediction = model(batch, training=False)
+    labels.append(_decode_one_hot(label[0]))
+    predictions.append(_decode_one_hot(prediction[0]))
+    detection_confidence.append(prediction[0].numpy()[1])
+
+  return labels, predictions, detection_confidence
+
+def eval_binary_classifier(model, dataset):
+  labels, predictions, _ = predict_binary_classifier(model, dataset)
 
   conf_matrix = confusion_matrix(labels, predictions)
   precision_recall = precision_recall_fscore_support(labels, predictions)
@@ -102,23 +138,10 @@ def eval_model(model, dataset, num_instances, labels):
   return conf_matrix, precision_recall
 
 def main(_):
-  if FLAGS.validation_csv_file is None:
-    raise RuntimeError('Must specify --validation_csv_file for evaluation.')
-
-  if FLAGS.ckpt_dir is None:
-    raise RuntimeError('Must specify --ckpt_dir for evaluation')
-
-  if FLAGS.num_classes is None:
-    raise RuntimeError('Must specify --num_classes for evaluation')
-
-  if FLAGS.dataset_base_dir is None:
-    raise RuntimeError('Must specify --dataset_base_dir for evaluation.')
-
-  dataset, num_instances, labels = build_input_data(FLAGS.validation_csv_file)
+  dataset = build_input_data()
   model = load_model()
+  conf_matrix, precision_recall = eval_binary_classifier(model, dataset)
 
-  conf_matrix, precision_recall = eval_model(
-                                    model, dataset, num_instances, labels)
   print(conf_matrix)
   print(precision_recall)
 
