@@ -6,8 +6,12 @@ import randaugment
 import simpleaugment
 
 flags.DEFINE_bool(
-    'normalize_input', default=True,
+    'normalize_input', default=False,
     help=('Normalize inputs using ImageNet mean and std'))
+
+flags.DEFINE_bool(
+    'input_scale_tf_mode', default=False,
+    help=('Scale input in TF format, between -1 and 1.'))
 
 flags.DEFINE_bool(
     'use_simple_augment', default=False,
@@ -69,6 +73,14 @@ def normalize_image(image):
 
   return image
 
+def scale_input_tf_mode(image):
+  image = tf.image.convert_image_dtype(image, dtype=tf.uint8)
+  image = tf.cast(image, tf.float32)
+  image /= 127.5
+  image -= 1.
+
+  return image
+
 def resize_image(image, output_size):
   image = tf.image.convert_image_dtype(image, dtype=tf.float32)
   image = tf.image.resize(image, size=(output_size, output_size))
@@ -96,6 +108,8 @@ def preprocess_for_train(image,
 
   if FLAGS.normalize_input:
     image = normalize_image(image)
+  elif FLAGS.input_scale_tf_mode:
+    image = scale_input_tf_mode(image)
   else:
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
@@ -107,6 +121,8 @@ def preprocess_for_eval(image, output_size):
 
   if FLAGS.normalize_input:
     image = normalize_image(image)
+  elif FLAGS.input_scale_tf_mode:
+    image = scale_input_tf_mode(image)
   else:
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
@@ -118,6 +134,11 @@ def preprocess_image(image,
                      randaug_num_layers=None,
                      randaug_magnitude=None,
                      seed=None):
+
+  if FLAGS.normalize_input and FLAGS.input_scale_tf_mode:
+    raise RuntimeError('Input normalization is not compatible scaling input'
+                       ' using tf mode. You cannot set true to both'
+                       ' --normalize_input and --input_scale_tf_mode flags')
 
   if is_training:
     return preprocess_for_train(image,
