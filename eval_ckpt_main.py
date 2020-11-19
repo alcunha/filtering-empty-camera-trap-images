@@ -2,8 +2,9 @@ import os
 
 from absl import app
 from absl import flags
-from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
+from sklearn.metrics import confusion_matrix, precision_recall_fscore_support, precision_recall_curve
 import numpy as np
+import matplotlib.pyplot as plt
 import tensorflow as tf
 
 import dataloader
@@ -41,6 +42,10 @@ flags.DEFINE_string(
 flags.DEFINE_integer(
     'num_classes', default=None,
     help=('Number of classes'))
+
+flags.DEFINE_integer(
+    'log_frequence', default=500,
+    help=('Log prediction every n steps'))
 
 flags.mark_flag_as_required('validation_files')
 flags.mark_flag_as_required('ckpt_dir')
@@ -120,6 +125,7 @@ def predict_binary_classifier(model, dataset):
   labels = []
   predictions = []
   detection_confidence = []
+  count = 0
 
   for batch, label in dataset:
     prediction = model(batch, training=False)
@@ -127,23 +133,30 @@ def predict_binary_classifier(model, dataset):
     predictions.append(_decode_one_hot(prediction[0]))
     detection_confidence.append(prediction[0].numpy()[1])
 
+    if count % FLAGS.log_frequence == 0:
+      tf.compat.v1.logging.info('Finished eval step %d' % count)
+    count += 1
+
   return labels, predictions, detection_confidence
 
 def eval_binary_classifier(model, dataset):
-  labels, predictions, _ = predict_binary_classifier(model, dataset)
+  labels, predictions, probas_pred = predict_binary_classifier(model, dataset)
 
   conf_matrix = confusion_matrix(labels, predictions)
   precision_recall = precision_recall_fscore_support(labels, predictions)
+  prec_recall_curve = precision_recall_curve(labels, probas_pred)
 
-  return conf_matrix, precision_recall
+  return conf_matrix, precision_recall, prec_recall_curve
 
 def main(_):
   dataset = build_input_data()
   model = load_model()
-  conf_matrix, precision_recall = eval_binary_classifier(model, dataset)
+  conf_matrix, precision_recall, prec_recall_curve = eval_binary_classifier(
+                                                                model, dataset)
 
   print(conf_matrix)
   print(precision_recall)
+  print(prec_recall_curve)
 
 if __name__ == '__main__':
   app.run(main)
