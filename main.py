@@ -153,7 +153,8 @@ def get_model(num_classes):
   model = model_builder.create(
     model_name=FLAGS.model_name,
     num_classes=num_classes,
-    input_size=FLAGS.input_size
+    input_size=FLAGS.input_size,
+    seed=FLAGS.random_seed
   )
 
   return model
