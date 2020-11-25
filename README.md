@@ -13,7 +13,9 @@ Model name | Input size | Dataset | Accuracy | Precision (nonempty) | Recall (no
 
 
 ### Detectors
-Model name | Input size | Dataset | mAP | AR@1
------------|------------|---------|-----|-----
-[Efficientdet-D0](https://drive.google.com/file/d/1GYHDhKiLxBPlL_ttPq9nKXF2qn0rnhH5/view?usp=sharing) | 512x512 | Caltech | 55.4 | 59.6
-[SSD MobileNetV2 FPNLite](https://drive.google.com/file/d/1nKmrkW2lIVv-XdaaIZKwMK2PaOB9U-a3/view?usp=sharing) | 320x320 | Caltech | 49.2 | 54.2
+Model name | Input size | Dataset | mAP | AR@1 | Accuracy* | Precision (nonempty)* | Recall (nonempty)*
+-----------|------------|---------|-----|------|----------|----------------------|------------------
+[Efficientdet-D0](https://drive.google.com/file/d/1PV9r3V7c1zMaiYDAjXKgqf82e8wWAgFU/view?usp=sharing) | 512x512 | Caltech | 55.4 | 59.6 | 88.4% | 97.1% | 80.9%
+[SSD MobileNetV2 FPNLite](https://drive.google.com/file/d/1xpCbsFkjpDSLzcCg2vKGcHmSQsPnO-lO/view?usp=sharing) | 320x320 | Caltech | 49.2 | 54.2 | 84.7% | 93.1% | 77.4%
+
+*Accuracy, precision and recall on detectors are calculated considering only the bounding box with highest confidence. We used the 0.5 as thrshold to consider as a nonempty class, the same used for the classifiers.
