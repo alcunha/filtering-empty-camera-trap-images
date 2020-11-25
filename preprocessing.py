@@ -5,13 +5,13 @@ import tensorflow as tf
 import randaugment
 import simpleaugment
 
-flags.DEFINE_bool(
-    'normalize_input', default=False,
-    help=('Normalize inputs using ImageNet mean and std'))
-
-flags.DEFINE_bool(
-    'input_scale_tf_mode', default=False,
-    help=('Scale input in TF format, between -1 and 1.'))
+flags.DEFINE_enum(
+    'input_scale_mode', default='float32',
+    enum_values=['tf_mode', 'torch_mode', 'unit8', 'float32'],
+    help=('Mode for scaling input: tf_mode scales image between -1 and 1;'
+          ' torch_mode normalizes inputs using ImageNet mean and std using'
+          ' float32 input format; unit8 uses image on scale 0-255; float32'
+          ' uses image on scale 0-1'))
 
 flags.DEFINE_bool(
     'use_simple_augment', default=False,
@@ -81,6 +81,16 @@ def scale_input_tf_mode(image):
 
   return image
 
+def scale_input(image):
+  if FLAGS.input_scale_mode == 'torch_mode':
+    return normalize_image(image)
+  elif FLAGS.input_scale_mode == 'tf_mode':
+    return scale_input_tf_mode(image)
+  elif FLAGS.input_scale_mode == 'unit8':
+    return tf.image.convert_image_dtype(image, dtype=tf.uint8)
+  else:
+    return tf.image.convert_image_dtype(image, dtype=tf.float32)
+
 def resize_image(image, output_size):
   image = tf.image.convert_image_dtype(image, dtype=tf.float32)
   image = tf.image.resize(image, size=(output_size, output_size))
@@ -92,6 +102,10 @@ def preprocess_for_train(image,
                         randaug_num_layers=None,
                         randaug_magnitude=None,
                         seed=None):
+
+  if output_size is None:
+    raise RuntimeError('Output size cannot be None for image preprocessing'
+                       ' during training.')
 
   image = random_crop(image, seed)
   image = resize_image(image, output_size)
@@ -106,25 +120,16 @@ def preprocess_for_train(image,
     if FLAGS.use_simple_augment:
       image = simpleaugment.distort_image_with_simpleaugment(image, seed)
 
-  if FLAGS.normalize_input:
-    image = normalize_image(image)
-  elif FLAGS.input_scale_tf_mode:
-    image = scale_input_tf_mode(image)
-  else:
-    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+  image = scale_input(image)
 
   return image
 
 def preprocess_for_eval(image, output_size):
 
-  image = resize_image(image, output_size)
+  if output_size is not None:
+    image = resize_image(image, output_size)
 
-  if FLAGS.normalize_input:
-    image = normalize_image(image)
-  elif FLAGS.input_scale_tf_mode:
-    image = scale_input_tf_mode(image)
-  else:
-    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+  image = scale_input(image)
 
   return image
 
@@ -134,12 +139,6 @@ def preprocess_image(image,
                      randaug_num_layers=None,
                      randaug_magnitude=None,
                      seed=None):
-
-  if FLAGS.normalize_input and FLAGS.input_scale_tf_mode:
-    raise RuntimeError('Input normalization is not compatible scaling input'
-                       ' using tf mode. You cannot set true to both'
-                       ' --normalize_input and --input_scale_tf_mode flags')
-
   if is_training:
     return preprocess_for_train(image,
                                 output_size,

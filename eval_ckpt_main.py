@@ -4,7 +4,6 @@ from absl import app
 from absl import flags
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support, precision_recall_curve
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
 
 import dataloader
