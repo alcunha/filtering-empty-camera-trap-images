@@ -5,13 +5,10 @@ import tensorflow as tf
 
 import lr_schedulers
 
-class HParams(
-  collections.namedtuple("HParams", [
+HParams = collections.namedtuple("HParams", [
     'lr', 'use_cosine_decay', 'warmup_steps', 'epochs', 'batch_size',
     'momentum', 'use_label_smoothing', 'use_logits', 'model_dir'
-  ])):
-  """ The hyperparams for training a model
-  """
+  ])
 
 def get_default_hparams():
   return HParams(

@@ -3,12 +3,9 @@ import collections
 import tensorflow as tf
 import tensorflow_hub as hub
 
-class ModelSpecs(
-  collections.namedtuple("ModelSpecs", [
+ModelSpecs = collections.namedtuple("ModelSpecs", [
     'uri', 'type', 'input_size', 'classes', 'activation'
-  ])):
-  """ The specifications for a image model
-  """
+  ])
 
 
 def get_default_specs():
