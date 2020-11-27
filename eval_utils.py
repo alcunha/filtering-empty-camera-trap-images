@@ -3,7 +3,7 @@ import pickle
 
 ClassifierResults = collections.namedtuple("ClassifierResults", [
     'model_name', 'ckpt_name', 'accuracy', 'confusion_matrix',
-    'precision_recall', 'precision_recall_curve'
+    'precision_recall_f1_per_class', 'precision_recall_curve'
   ])
 
 
@@ -12,14 +12,14 @@ def save_results_to_file(filename,
                          ckpt_name,
                          accuracy,
                          confusion_matrix,
-                         precision_recall,
+                         precision_recall_f1_per_class,
                          precision_recall_curve):
 
   results = ClassifierResults(model_name,
                               ckpt_name,
                               accuracy,
                               confusion_matrix,
-                              precision_recall,
+                              precision_recall_f1_per_class,
                               precision_recall_curve)
 
   with open(filename, 'wb') as file_obj:

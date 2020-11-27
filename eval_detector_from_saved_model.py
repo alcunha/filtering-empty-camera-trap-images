@@ -2,10 +2,12 @@ import os
 
 from absl import app
 from absl import flags
-from sklearn.metrics import confusion_matrix, precision_recall_fscore_support, precision_recall_curve
+from sklearn.metrics import (accuracy_score, confusion_matrix,
+    precision_recall_fscore_support, precision_recall_curve)
 import tensorflow as tf
 
 import dataloader
+import eval_utils
 
 FLAGS = flags.FLAGS
 
@@ -37,6 +39,15 @@ flags.DEFINE_float(
 flags.DEFINE_integer(
     'log_frequence', default=500,
     help=('Log prediction every n steps'))
+
+flags.DEFINE_string(
+    'results_file', default=None,
+    help=('File name where the results will be stored.'))
+
+flags.DEFINE_string(
+    'model_name', default=None,
+    help=('Name used to identify model on results fils. If no name is provided,'
+          ' the checkpoint name will be used.'))
 
 flags.mark_flag_as_required('validation_files')
 flags.mark_flag_as_required('num_classes')
@@ -109,23 +120,40 @@ def _detect_poi_agnostic(model, dataset):
 def eval_detector_as_binary_classifier(model, dataset):
   labels, predictions, probas_pred = _detect_poi_agnostic(model, dataset)
 
+  accuracy = accuracy_score(labels, predictions)
   conf_matrix = confusion_matrix(labels, predictions)
-  precision_recall = precision_recall_fscore_support(labels, predictions)
+  precision_recall_f1 = precision_recall_fscore_support(labels, predictions)
   prec_recall_curve = precision_recall_curve(labels, probas_pred)
 
-  return conf_matrix, precision_recall, prec_recall_curve
+  return accuracy, conf_matrix, precision_recall_f1, prec_recall_curve
 
 
 def main(_):
   dataset = build_input_data()
   model = load_model()
 
-  conf_matrix, precision_recall, prec_recall_curve = \
+  accuracy, conf_matrix, precision_recall_f1, prec_recall_curve = \
       eval_detector_as_binary_classifier(model, dataset)
 
+  print(accuracy)
   print(conf_matrix)
-  print(precision_recall)
+  print(precision_recall_f1)
   print(prec_recall_curve)
+
+  if FLAGS.results_file is not None:
+    ckpt_name = FLAGS.exported_model_path.split('/')[-1]
+
+    if FLAGS.model_name is not None:
+      model_name = FLAGS.model_name
+    else:
+      model_name = ckpt_name
+    eval_utils.save_results_to_file(FLAGS.results_file,
+                                    model_name,
+                                    ckpt_name,
+                                    accuracy,
+                                    conf_matrix,
+                                    precision_recall_f1,
+                                    prec_recall_curve)
 
 if __name__ == '__main__':
   app.run(main)

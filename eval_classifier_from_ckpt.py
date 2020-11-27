@@ -2,11 +2,13 @@ import os
 
 from absl import app
 from absl import flags
-from sklearn.metrics import confusion_matrix, precision_recall_fscore_support, precision_recall_curve
+from sklearn.metrics import (accuracy_score, confusion_matrix,
+    precision_recall_fscore_support, precision_recall_curve)
 import numpy as np
 import tensorflow as tf
 
 import dataloader
+import eval_utils
 import model_builder
 import train_image_classifier
 
@@ -45,6 +47,10 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'log_frequence', default=500,
     help=('Log prediction every n steps'))
+
+flags.DEFINE_string(
+    'results_file', default=None,
+    help=('File name where the results will be stored.'))
 
 flags.mark_flag_as_required('validation_files')
 flags.mark_flag_as_required('ckpt_dir')
@@ -141,21 +147,33 @@ def predict_binary_classifier(model, dataset):
 def eval_binary_classifier(model, dataset):
   labels, predictions, probas_pred = predict_binary_classifier(model, dataset)
 
+  accuracy = accuracy_score(labels, predictions)
   conf_matrix = confusion_matrix(labels, predictions)
-  precision_recall = precision_recall_fscore_support(labels, predictions)
+  precision_recall_f1 = precision_recall_fscore_support(labels, predictions)
   prec_recall_curve = precision_recall_curve(labels, probas_pred)
 
-  return conf_matrix, precision_recall, prec_recall_curve
+  return accuracy, conf_matrix, precision_recall_f1, prec_recall_curve
 
 def main(_):
   dataset = build_input_data()
   model = load_model()
-  conf_matrix, precision_recall, prec_recall_curve = eval_binary_classifier(
-                                                                model, dataset)
+  accuracy, conf_matrix, precision_recall_f1, prec_recall_curve = \
+      eval_binary_classifier(model, dataset)
 
+  print(accuracy)
   print(conf_matrix)
-  print(precision_recall)
+  print(precision_recall_f1)
   print(prec_recall_curve)
+
+  if FLAGS.results_file is not None:
+    ckpt_name = FLAGS.ckpt_dir.split('/')[-1]
+    eval_utils.save_results_to_file(FLAGS.results_file,
+                                    FLAGS.model_name,
+                                    ckpt_name,
+                                    accuracy,
+                                    conf_matrix,
+                                    precision_recall_f1,
+                                    prec_recall_curve)
 
 if __name__ == '__main__':
   app.run(main)
