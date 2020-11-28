@@ -1,3 +1,5 @@
+import os
+
 import collections
 import pickle
 
@@ -21,6 +23,9 @@ def save_results_to_file(filename,
                               confusion_matrix,
                               precision_recall_f1_per_class,
                               precision_recall_curve)
+
+  if not os.path.exists(os.path.dirname(filename)):
+    os.makedirs(os.path.dirname(filename))
 
   with open(filename, 'wb') as file_obj:
     pickle.dump(results, file_obj)

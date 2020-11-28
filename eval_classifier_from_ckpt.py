@@ -28,10 +28,6 @@ flags.DEFINE_integer(
     'input_size', default=224,
     help=('Input size of the model'))
 
-flags.DEFINE_integer(
-    'batch_size', default=1,
-    help=('Batch size used during evaluation.'))
-
 flags.DEFINE_string(
     'model_name', default='efficientnet-b0',
     help=('Model name of the archtecture'))
@@ -56,6 +52,8 @@ flags.mark_flag_as_required('validation_files')
 flags.mark_flag_as_required('ckpt_dir')
 flags.mark_flag_as_required('num_classes')
 
+BATCH_SIZE = 1
+
 def build_input_data():
   if FLAGS.validation_files.endswith('.csv'):
     if FLAGS.dataset_base_dir is None:
@@ -65,7 +63,7 @@ def build_input_data():
     input_data = dataloader.CSVInputProcessor(
       csv_file=FLAGS.validation_files,
       data_dir=FLAGS.dataset_base_dir,
-      batch_size=FLAGS.batch_size,
+      batch_size=BATCH_SIZE,
       is_training=False,
       output_size=FLAGS.input_size,
       num_classes=FLAGS.num_classes,
@@ -73,7 +71,7 @@ def build_input_data():
   else:
     input_data = dataloader.TFRecordWBBoxInputProcessor(
       file_pattern=FLAGS.validation_files,
-      batch_size=FLAGS.batch_size,
+      batch_size=BATCH_SIZE,
       is_training=False,
       output_size=FLAGS.input_size,
       num_classes=FLAGS.num_classes,
@@ -98,7 +96,7 @@ def _initialize_model_optimizer(model):
   y = np.array([fake_labels for i in range(fake_steps)])
 
   model.fit(
-    x, y, batch_size=FLAGS.batch_size, epochs=1, steps_per_epoch=fake_steps)
+    x, y, batch_size=BATCH_SIZE, epochs=1, steps_per_epoch=fake_steps)
 
 # dataset is required only to force load optimizer checkpoints
 def load_model():
