@@ -2,6 +2,8 @@ import os
 
 import collections
 import pickle
+import tensorflow as tf
+import pandas as pd
 
 ClassifierResults = collections.namedtuple("ClassifierResults", [
     'model_name', 'ckpt_name', 'accuracy', 'confusion_matrix',
@@ -40,3 +42,16 @@ def load_results_from_file(filename):
     results = pickle.load(file_obj)
 
   return results
+
+def load_results_to_df(results_patern):
+  file_list = tf.io.gfile.glob(results_patern)
+  results_list = []
+  
+  for file_result in file_list:
+    result_dict = load_results_from_file(file_result)._asdict()
+    result_dict['file_name'] = file_result
+    results_list.append(result_dict)
+  
+  df = pd.DataFrame(results_list)
+  
+  return df
