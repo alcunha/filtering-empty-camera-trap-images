@@ -1,16 +1,11 @@
-import os
-
 from absl import app
 from absl import flags
 from sklearn.metrics import (accuracy_score, confusion_matrix,
     precision_recall_fscore_support, precision_recall_curve)
-import numpy as np
 import tensorflow as tf
 
 import dataloader
 import eval_utils
-import model_builder
-import train_image_classifier
 
 FLAGS = flags.FLAGS
 
@@ -82,44 +77,6 @@ def build_input_data():
 
   return dataset
 
-def _generate_fake_instance():
-  instance_shape = (FLAGS.input_size, FLAGS.input_size, 3)
-  fake_instance = np.ones(instance_shape, dtype=np.float32)
-  fake_labels = np.ones((FLAGS.num_classes,))
-
-  return fake_instance, fake_labels
-
-def _initialize_model_optimizer(model):
-  fake_steps = 2
-  fake_instance, fake_labels = _generate_fake_instance()
-  x = np.array([fake_instance for i in range(fake_steps)])
-  y = np.array([fake_labels for i in range(fake_steps)])
-
-  model.fit(
-    x, y, batch_size=BATCH_SIZE, epochs=1, steps_per_epoch=fake_steps)
-
-# dataset is required only to force load optimizer checkpoints
-def load_model():
-  model = model_builder.create(
-    model_name=FLAGS.model_name,
-    num_classes=FLAGS.num_classes,
-    input_size=FLAGS.input_size
-  )
-
-  hparams = train_image_classifier.get_default_hparams()
-  optimizer = train_image_classifier.generate_optimizer(hparams)
-  loss_fn = train_image_classifier.generate_loss_fn(hparams)
-  model.compile(optimizer=optimizer, loss=loss_fn, metrics=['accuracy'])
-
-  # workaround to fix 'Unresolved object in checkpoint' for optimizer variables
-  _initialize_model_optimizer(model)
-
-  checkpoint_path = os.path.join(FLAGS.ckpt_dir, "ckp")
-
-  model.load_weights(checkpoint_path)
-
-  return model
-
 def _decode_one_hot(one_hot_tensor):
   return tf.argmax(one_hot_tensor).numpy()
 
@@ -154,7 +111,10 @@ def eval_binary_classifier(model, dataset):
 
 def main(_):
   dataset = build_input_data()
-  model = load_model()
+  model = eval_utils.load_model_from_checkpoint(FLAGS.model_name,
+                                                FLAGS.num_classes,
+                                                FLAGS.input_size,
+                                                FLAGS.ckpt_dir)
   accuracy, conf_matrix, precision_recall_f1, prec_recall_curve = \
       eval_binary_classifier(model, dataset)
 
