@@ -29,6 +29,7 @@ class CSVInputProcessor:
               randaug_num_layers=None,
               randaug_magnitude=None,
               use_fake_data=False,
+              provide_filename=False,
               seed=None):
     self.csv_file = csv_file
     self.data_dir = data_dir
@@ -39,6 +40,7 @@ class CSVInputProcessor:
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
     self.use_fake_data = use_fake_data
+    self.provide_filename = provide_filename
     self.seed = seed
 
   def make_source_dataset(self):
@@ -60,6 +62,9 @@ class CSVInputProcessor:
       image = tf.io.read_file(self.data_dir + file_name)
       image = tf.io.decode_jpeg(image, channels=3)
       label = tf.one_hot(label, self.num_classes)
+
+      if self.provide_filename:
+        return image, (label, file_name)
 
       return image, label
 
@@ -96,6 +101,7 @@ class TFRecordWBBoxInputProcessor:
               randaug_num_layers=None,
               randaug_magnitude=None,
               use_fake_data=False,
+              provide_filename=False,
               seed=None):
     self.file_pattern = file_pattern
     self.batch_size = batch_size
@@ -107,6 +113,7 @@ class TFRecordWBBoxInputProcessor:
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
     self.use_fake_data = use_fake_data
+    self.provide_filename = provide_filename
     self.seed = seed
 
     self.feature_description = {
@@ -175,6 +182,10 @@ class TFRecordWBBoxInputProcessor:
       image = tf.io.decode_jpeg(features['image/encoded'])
       bboxes = _parse_bboxes(features)
       label = _parse_label(features)
+      file_name = features['image/filename']
+
+      if self.provide_filename:
+        return image, (label, file_name), bboxes
 
       return image, label, bboxes
 

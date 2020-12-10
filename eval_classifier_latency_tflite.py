@@ -5,6 +5,7 @@ from absl import app
 from absl import flags
 import numpy as np
 from PIL import Image
+import pandas as pd
 
 try:
   import tensorflow.lite as tfl
@@ -25,11 +26,16 @@ flags.DEFINE_string(
 
 flags.DEFINE_enum(
     'input_scale_mode', default='float32',
-    enum_values=['tf_mode', 'torch_mode', 'unit8', 'float32'],
+    enum_values=['tf_mode', 'torch_mode', 'uint8', 'float32'],
     help=('Mode for scaling input: tf_mode scales image between -1 and 1;'
           ' torch_mode normalizes inputs using ImageNet mean and std using'
-          ' float32 input format; unit8 uses image on scale 0-255; float32'
+          ' float32 input format; uint8 uses image on scale 0-255; float32'
           ' uses image on scale 0-1'))
+
+flags.DEFINE_string(
+    'predictions_csv_file', default=None,
+    help=('File name to save model predictions.')
+)
 
 flags.mark_flag_as_required('model')
 flags.mark_flag_as_required('images_patern')
@@ -65,8 +71,8 @@ def load_image(image_path, height, width):
     image = normalize_image(image)
   elif FLAGS.input_scale_mode == 'tf_mode':
     image = scale_input_tf_mode(image)
-  elif FLAGS.input_scale_mode == 'unit8':
-    image = np.asarray(image, dtype=np.unit8)
+  elif FLAGS.input_scale_mode == 'uint8':
+    image = np.asarray(image, dtype=np.uint8)
   else:
     image = np.asarray(image, dtype=np.float32)
     image = image/255
@@ -93,6 +99,14 @@ def classify_image(interpreter, image):
 
   return output_data
 
+def _save_predictions_to_csv(file_names, predictions):
+  preds = {
+    'file_names': file_names,
+    'predictions': predictions
+  }
+  df = pd.DataFrame.from_dict(preds, orient='index').transpose()
+  df.to_csv(FLAGS.predictions_csv_file, index=False)
+
 def eval_model():
   image_count = 0
   total_elapsed_time = 0
@@ -109,15 +123,15 @@ def eval_model():
 
     total_elapsed_time += elapsed_ms
     image_count += 1
-    predictions.append({
-      'image': image_path,
-      'predictions': preds
-    })
+    predictions.append(preds)
 
-  return total_elapsed_time/image_count, predictions
+  if FLAGS.predictions_csv_file is not None:
+    _save_predictions_to_csv(image_list, predictions)
+
+  return total_elapsed_time/image_count
 
 def main(_):
-  avg_elapsed_time, _ = eval_model()
+  avg_elapsed_time = eval_model()
   print("Avareged elapsed time: %fms" % (avg_elapsed_time))
 
 if __name__ == '__main__':

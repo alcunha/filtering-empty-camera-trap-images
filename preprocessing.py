@@ -7,10 +7,10 @@ import simpleaugment
 
 flags.DEFINE_enum(
     'input_scale_mode', default='float32',
-    enum_values=['tf_mode', 'torch_mode', 'unit8', 'float32'],
+    enum_values=['tf_mode', 'torch_mode', 'uint8', 'float32'],
     help=('Mode for scaling input: tf_mode scales image between -1 and 1;'
           ' torch_mode normalizes inputs using ImageNet mean and std using'
-          ' float32 input format; unit8 uses image on scale 0-255; float32'
+          ' float32 input format; uint8 uses image on scale 0-255; float32'
           ' uses image on scale 0-1'))
 
 flags.DEFINE_bool(
@@ -86,7 +86,7 @@ def scale_input(image):
     return normalize_image(image)
   elif FLAGS.input_scale_mode == 'tf_mode':
     return scale_input_tf_mode(image)
-  elif FLAGS.input_scale_mode == 'unit8':
+  elif FLAGS.input_scale_mode == 'uint8':
     return tf.image.convert_image_dtype(image, dtype=tf.uint8)
   else:
     return tf.image.convert_image_dtype(image, dtype=tf.float32)

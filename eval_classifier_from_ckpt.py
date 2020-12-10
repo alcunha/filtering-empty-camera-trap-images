@@ -2,6 +2,7 @@ from absl import app
 from absl import flags
 from sklearn.metrics import (accuracy_score, confusion_matrix,
     precision_recall_fscore_support, precision_recall_curve)
+import pandas as pd
 import tensorflow as tf
 
 import dataloader
@@ -43,6 +44,11 @@ flags.DEFINE_string(
     'results_file', default=None,
     help=('File name where the results will be stored.'))
 
+flags.DEFINE_string(
+    'predictions_csv_file', default=None,
+    help=('File name to save model predictions.')
+)
+
 flags.mark_flag_as_required('validation_files')
 flags.mark_flag_as_required('ckpt_dir')
 flags.mark_flag_as_required('num_classes')
@@ -62,6 +68,7 @@ def build_input_data():
       is_training=False,
       output_size=FLAGS.input_size,
       num_classes=FLAGS.num_classes,
+      provide_filename=True,
     )
   else:
     input_data = dataloader.TFRecordWBBoxInputProcessor(
@@ -70,32 +77,48 @@ def build_input_data():
       is_training=False,
       output_size=FLAGS.input_size,
       num_classes=FLAGS.num_classes,
-      num_instances=0
+      num_instances=0,
+      provide_filename=True,
     )
 
   dataset, _, _ = input_data.make_source_dataset()
 
   return dataset
 
+def _save_predictions_to_csv(file_names, labels, predictions):
+  preds = {
+    'file_names': file_names,
+    'labels': labels,
+    'predictions': predictions
+  }
+
+  df = pd.DataFrame.from_dict(preds, orient='index').transpose()
+  df.to_csv(FLAGS.predictions_csv_file, index=False)
+
 def _decode_one_hot(one_hot_tensor):
   return tf.argmax(one_hot_tensor).numpy()
 
 def predict_binary_classifier(model, dataset):
-
+  file_names = []
   labels = []
   predictions = []
   detection_confidence = []
   count = 0
 
-  for batch, label in dataset:
+  for batch, metadata in dataset:
     prediction = model(batch, training=False)
+    label, file_name = metadata
     labels.append(_decode_one_hot(label[0]))
+    file_names.append(file_name[0].numpy())
     predictions.append(_decode_one_hot(prediction[0]))
     detection_confidence.append(prediction[0].numpy()[1])
 
     if count % FLAGS.log_frequence == 0:
       tf.compat.v1.logging.info('Finished eval step %d' % count)
     count += 1
+
+  if FLAGS.predictions_csv_file is not None:
+    _save_predictions_to_csv(file_names, labels, detection_confidence)
 
   return labels, predictions, detection_confidence
 
