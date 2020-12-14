@@ -20,9 +20,11 @@ Model name | Input size | Dataset | Accuracy | Precision (nonempty) | Recall (no
 [MobileNetV2](https://drive.google.com/file/d/1eyqC4kgYoXdvCGeEI4cCOTI5U7FIei5R/view?usp=sharing) | 224x224 | Caltech | 70.15% | 66.46% | 90.40%
 [MobileNetV2](https://drive.google.com/file/d/16w5kz3cWhfyIooP3axfXfVXZlvyTyuFL/view?usp=sharing) | 320x320 | Caltech | 69.55% | 65.88% | 90.59%
 [Efficientnet-B0](https://drive.google.com/file/d/1xbXNvgvRoSYPgv7ZC7RPmDWuz2gHzhYy/view?usp=sharing) | 224x224 | Snapshot Serengeti (Site) | 94.13% | 86.56% | 93.66%
+[Efficientnet-B3](https://drive.google.com/file/d/1B44WgMgSx2dMr2qfN7Lq7vr_ll0oNMIQ/view?usp=sharing) | 300x300 | Snapshot Serengeti (Site) | 95.76% | 90.00% | 95.54%
 [MobileNetV2](https://drive.google.com/file/d/1E4F6PZcuRFJ5HiQf7GKJ9TRDdpsdLyf5/view?usp=sharing) | 224x224 | Snapshot Serengeti (Site) | 93.13% | 83.20% | 94.64%
 [MobileNetV2](https://drive.google.com/file/d/1mMvp_gsUd_wucg8LlzkgAYJ_Q6BV-VkV/view?usp=sharing) | 320x320 | Snapshot Serengeti (Site) | 94.59% | 86.70% | 95.36%
 [Efficientnet-B0](https://drive.google.com/file/d/1T6TYGkcpKmjnG6LJtS8OCcabtDCle1Yw/view?usp=sharing) | 224x224 | Snapshot Serengeti (Time) | 90.91% | 65.78% | 92.89%
+[Efficientnet-B3](https://drive.google.com/file/d/1ZU9nb_1G-gEPJwcjnm1sUa_Ik3LxD6wb/view?usp=sharing) | 300x300 | Snapshot Serengeti (Time) | 92.61% | 70.30% | 95.14%
 [MobileNetV2](https://drive.google.com/file/d/1VsFMxDrhvZqBCxrdd4WMjMsiA2i20Tv2/view?usp=sharing) | 224x224 | Snapshot Serengeti (Time) | 89.75% | 62.46% | 93.99%
 [MobileNetV2](https://drive.google.com/file/d/1dyOU0GnQphSq-S7_B1_d3qWwRnjOCQnF/view?usp=sharing) | 320x320 | Snapshot Serengeti (Time) | 91.70% | 67.64% | 94.79%
 [Efficientnet-B0](https://drive.google.com/file/d/1zkDN1g8LeBdgqFoGEBqgbcGdoKjpLn-3/view?usp=sharing) | 224x224 | Snapshot Serengeti (Event) | 95.84% | 96.49% | 95.04%
