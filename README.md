@@ -37,3 +37,24 @@ Model name | Input size | Dataset | mAP | AR@1 | Accuracy* | Precision (nonempty
 [SSD MobileNetV2 FPNLite](https://drive.google.com/file/d/1xpCbsFkjpDSLzcCg2vKGcHmSQsPnO-lO/view?usp=sharing) | 320x320 | Caltech | 49.2 | 54.2 | 84.70% | 93.13% | 77.41%
 
 *Accuracy, precision and recall on detectors are calculated considering only the bounding box with highest confidence. We used the 0.5 as thrshold to consider as a nonempty class, the same used for the classifiers.
+
+### Latency on Raspberry Pi 3
+
+Model name | Input size | Dataset | Latency (ms)** | Peak memory (MB)
+-----------|------------|---------|----------------|-----------------
+[Efficientnet-B0](https://drive.google.com/file/d/1HRfmJyC_1QkYdrRHJdrLhzAQ16NmbVlv/view?usp=sharing) | 224x224 | Caltech | 890.533 ± 42.403 | 35.418
+[Efficientnet-B3](https://drive.google.com/file/d/1-30yk2IWMQqMIPbQVQPq01icUn8BmFTO/view?usp=sharing) | 300x300 | Caltech | 3676.91 ± 14.681 | 90.418
+[MobileNetV2](https://drive.google.com/file/d/1eyqC4kgYoXdvCGeEI4cCOTI5U7FIei5R/view?usp=sharing) | 224x224 | Caltech | 368.748 ± 5.732 | 23.8945
+[MobileNetV2](https://drive.google.com/file/d/16w5kz3cWhfyIooP3axfXfVXZlvyTyuFL/view?usp=sharing) | 320x320 | Caltech | 715.018 ± 15.526 | 34.6133
+[Efficientnet-B0](https://drive.google.com/file/d/1xbXNvgvRoSYPgv7ZC7RPmDWuz2gHzhYy/view?usp=sharing) | 224x224 | Snapshot Serengeti (Site) | 872.717 ± 18.961 | 35.4375
+[Efficientnet-B3](https://drive.google.com/file/d/1B44WgMgSx2dMr2qfN7Lq7vr_ll0oNMIQ/view?usp=sharing) | 300x300 | Snapshot Serengeti (Site) | 3391.36 ± 80.018 | 90.3906
+[MobileNetV2](https://drive.google.com/file/d/1E4F6PZcuRFJ5HiQf7GKJ9TRDdpsdLyf5/view?usp=sharing) | 224x224 | Snapshot Serengeti (Site) | 340.081 ± 10.271 | 23.9883
+[MobileNetV2](https://drive.google.com/file/d/1mMvp_gsUd_wucg8LlzkgAYJ_Q6BV-VkV/view?usp=sharing) | 320x320 | Snapshot Serengeti (Site) | 675.552 ± 19.138 | 34.6758
+[Efficientnet-B0](https://drive.google.com/file/d/1T6TYGkcpKmjnG6LJtS8OCcabtDCle1Yw/view?usp=sharing) | 224x224 | Snapshot Serengeti (Time) | 839.740 ± 15.829 | 35.2266
+[Efficientnet-B3](https://drive.google.com/file/d/1ZU9nb_1G-gEPJwcjnm1sUa_Ik3LxD6wb/view?usp=sharing) | 300x300 | Snapshot Serengeti (Time) | 3289.56 ± 41.939 | 90.5859
+[MobileNetV2](https://drive.google.com/file/d/1VsFMxDrhvZqBCxrdd4WMjMsiA2i20Tv2/view?usp=sharing) | 224x224 | Snapshot Serengeti (Time) | 335.678 ± 10.143 | 23.918
+[MobileNetV2](https://drive.google.com/file/d/1dyOU0GnQphSq-S7_B1_d3qWwRnjOCQnF/view?usp=sharing) | 320x320 | Snapshot Serengeti (Time) | 657.872 ± 15.642 | 34.6055
+[Efficientnet-B0](https://drive.google.com/file/d/1zkDN1g8LeBdgqFoGEBqgbcGdoKjpLn-3/view?usp=sharing) | 224x224 | Snapshot Serengeti (Event) | 831.540 ± 17.915 | 35.7266
+
+
+**The entries show average latency ± standard deviation over 50 runs
