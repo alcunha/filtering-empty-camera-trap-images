@@ -46,6 +46,8 @@ Model name | Input size | Dataset | Latency (ms)** | Peak memory (MB)
 [Efficientnet-B3](https://drive.google.com/file/d/1-30yk2IWMQqMIPbQVQPq01icUn8BmFTO/view?usp=sharing) | 300x300 | Caltech | 3676.91 ± 14.681 | 90.418
 [MobileNetV2](https://drive.google.com/file/d/1eyqC4kgYoXdvCGeEI4cCOTI5U7FIei5R/view?usp=sharing) | 224x224 | Caltech | 368.748 ± 5.732 | 23.8945
 [MobileNetV2](https://drive.google.com/file/d/16w5kz3cWhfyIooP3axfXfVXZlvyTyuFL/view?usp=sharing) | 320x320 | Caltech | 715.018 ± 15.526 | 34.6133
+[Efficientdet-D0](https://drive.google.com/file/d/1PV9r3V7c1zMaiYDAjXKgqf82e8wWAgFU/view?usp=sharing) | 512x512 | Caltech | 4801.04 ± 24.769 | 154.406
+[SSD MobileNetV2 FPNLite](https://drive.google.com/file/d/1xpCbsFkjpDSLzcCg2vKGcHmSQsPnO-lO/view?usp=sharing) | 320x320 | Caltech | 868.186 ± 6.115 | 30.5664
 [Efficientnet-B0](https://drive.google.com/file/d/1xbXNvgvRoSYPgv7ZC7RPmDWuz2gHzhYy/view?usp=sharing) | 224x224 | Snapshot Serengeti (Site) | 872.717 ± 18.961 | 35.4375
 [Efficientnet-B3](https://drive.google.com/file/d/1B44WgMgSx2dMr2qfN7Lq7vr_ll0oNMIQ/view?usp=sharing) | 300x300 | Snapshot Serengeti (Site) | 3391.36 ± 80.018 | 90.3906
 [MobileNetV2](https://drive.google.com/file/d/1E4F6PZcuRFJ5HiQf7GKJ9TRDdpsdLyf5/view?usp=sharing) | 224x224 | Snapshot Serengeti (Site) | 340.081 ± 10.271 | 23.9883
