@@ -3,8 +3,6 @@ r""" Tool to export detector from a savedModel to TFLite
 If you get an error during the process, install the package tf-nightly
 """
 
-import os
-
 from absl import app
 from absl import flags
 import tensorflow as tf
@@ -25,8 +23,8 @@ flags.mark_flag_as_required('exported_model_path')
 flags.mark_flag_as_required('output_model_file')
 
 def convert_to_tflite():
-  saved_model_dir = os.path.join(FLAGS.exported_model_path, 'saved_model')
-  converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
+  converter = tf.lite.TFLiteConverter.from_saved_model(
+                  FLAGS.exported_model_path)
   tflite_model = converter.convert()
 
   with open(FLAGS.output_model_file, 'wb') as file_hdl:
@@ -34,8 +32,8 @@ def convert_to_tflite():
 
 def main(_):
   convert_to_tflite()
-  model_name = FLAGS.exported_model_path.split('/')[-1]
-  print("Saving %s to %s" % (model_name, FLAGS.output_model_file))
+  print("Saving %s to %s" % (FLAGS.exported_model_path,
+                             FLAGS.output_model_file))
 
 if __name__ == '__main__':
   app.run(main)
