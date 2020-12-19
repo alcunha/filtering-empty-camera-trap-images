@@ -25,6 +25,7 @@ class CSVInputProcessor:
               batch_size,
               is_training=False,
               output_size=224,
+              resize_with_pad=False,
               num_classes=None,
               randaug_num_layers=None,
               randaug_magnitude=None,
@@ -36,6 +37,7 @@ class CSVInputProcessor:
     self.batch_size = batch_size
     self.is_training = is_training
     self.output_size = output_size
+    self.resize_with_pad = resize_with_pad
     self.num_classes = num_classes
     self.randaug_num_layers = randaug_num_layers
     self.randaug_magnitude = randaug_magnitude
@@ -74,6 +76,7 @@ class CSVInputProcessor:
       image = preprocessing.preprocess_image(image,
                                     output_size=self.output_size,
                                     is_training=self.is_training,
+                                    resize_with_pad=self.resize_with_pad,
                                     randaug_num_layers=self.randaug_num_layers,
                                     randaug_magnitude=self.randaug_magnitude)
 
@@ -98,6 +101,7 @@ class TFRecordWBBoxInputProcessor:
               default_empty_label=0,
               is_training=False,
               output_size=224,
+              resize_with_pad=False,
               randaug_num_layers=None,
               randaug_magnitude=None,
               use_fake_data=False,
@@ -107,6 +111,7 @@ class TFRecordWBBoxInputProcessor:
     self.batch_size = batch_size
     self.is_training = is_training
     self.output_size = output_size
+    self.resize_with_pad = resize_with_pad
     self.num_classes = num_classes
     self.num_instances = num_instances
     self.default_empty_label = default_empty_label
@@ -195,6 +200,7 @@ class TFRecordWBBoxInputProcessor:
       image = preprocessing.preprocess_image(image,
                                     output_size=self.output_size,
                                     is_training=self.is_training,
+                                    resize_with_pad=self.resize_with_pad,
                                     randaug_num_layers=self.randaug_num_layers,
                                     randaug_magnitude=self.randaug_magnitude)
 

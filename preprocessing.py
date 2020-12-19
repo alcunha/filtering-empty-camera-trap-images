@@ -91,14 +91,18 @@ def scale_input(image):
   else:
     return tf.image.convert_image_dtype(image, dtype=tf.float32)
 
-def resize_image(image, output_size):
+def resize_image(image, output_size, resize_with_pad=False):
   image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-  image = tf.image.resize(image, size=(output_size, output_size))
+  if resize_with_pad:
+    image = tf.image.resize_with_pad(image, output_size, output_size)
+  else:
+    image = tf.image.resize(image, size=(output_size, output_size))
 
   return image
 
 def preprocess_for_train(image,
                         output_size,
+                        resize_with_pad=False,
                         randaug_num_layers=None,
                         randaug_magnitude=None,
                         seed=None):
@@ -108,7 +112,7 @@ def preprocess_for_train(image,
                        ' during training.')
 
   image = random_crop(image, seed)
-  image = resize_image(image, output_size)
+  image = resize_image(image, output_size, resize_with_pad)
   image = flip(image, seed)
 
   if randaug_num_layers is not None and randaug_magnitude is not None:
@@ -124,10 +128,10 @@ def preprocess_for_train(image,
 
   return image
 
-def preprocess_for_eval(image, output_size):
+def preprocess_for_eval(image, output_size, resize_with_pad=False):
 
   if output_size is not None:
-    image = resize_image(image, output_size)
+    image = resize_image(image, output_size, resize_with_pad)
 
   image = scale_input(image)
 
@@ -136,14 +140,16 @@ def preprocess_for_eval(image, output_size):
 def preprocess_image(image,
                      output_size=224,
                      is_training=False,
+                     resize_with_pad=False,
                      randaug_num_layers=None,
                      randaug_magnitude=None,
                      seed=None):
   if is_training:
     return preprocess_for_train(image,
                                 output_size,
+                                resize_with_pad,
                                 randaug_num_layers,
                                 randaug_magnitude,
                                 seed)
   else:
-    return preprocess_for_eval(image, output_size)
+    return preprocess_for_eval(image, output_size, resize_with_pad)
