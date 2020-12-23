@@ -60,3 +60,7 @@ Model name | Input size | Dataset | Latency (ms)** | Peak memory (MB)
 
 
 **The entries show average latency ± standard deviation over 50 runs
+
+## License
+
+[Apache License 2.0](LICENSE)
