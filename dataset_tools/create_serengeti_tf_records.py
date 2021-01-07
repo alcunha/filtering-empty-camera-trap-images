@@ -67,11 +67,19 @@ flags.DEFINE_string(
 
 flags.DEFINE_integer(
     'images_per_shard', default=600,
-    help=('Number of images per shard'))
+    help=('Number of images per shard. It is ignored if the number of files'
+          ' exceeds 999.'))
 
 flags.DEFINE_bool(
     'shufle_images', default=True,
     help=('Shufle images before to write to tfrecords'))
+
+flags.DEFINE_bool(
+    'keep_nonempty_without_bbox', default=True,
+    help=('Wheter nonempty images but without bounding boxes should be added to'
+          ' tfrecorfs files. If True, a bounding box with image dimensions will'
+          ' be added and the instance will be marked with the flag'
+          ' nonempty_without_bbox.'))
 
 if 'random_seed' not in list(FLAGS):
   flags.DEFINE_integer(
@@ -83,6 +91,12 @@ flags.mark_flag_as_required('annotations_file')
 flags.mark_flag_as_required('dataset_base_dir')
 flags.mark_flag_as_required('label_map_path')
 flags.mark_flag_as_required('output_dir')
+
+MAX_NUMBER_OF_SHARDS = 999
+
+def _should_skip_class_from_empty(category_id, category_index):
+  category_text = category_index[category_id]['name']
+  return category_text in FLAGS.empty_classes_list
 
 def _get_image_dimensions_from_file(image_path):
   image = tf.io.read_file(image_path)
@@ -100,8 +114,8 @@ def create_tf_example(image,
                       original_category_index):
   num_annotations_skipped = 0
   num_empty_annotations_skipped = 0
-  filename = image
-  image_id = image[:-4]
+  filename = image['file_name']
+  image_id = filename
 
   image_path = os.path.join(dataset_base_dir, filename)
   if not tf.io.gfile.exists(image_path):
@@ -123,6 +137,7 @@ def create_tf_example(image,
   ymaxs = []
   classes_text = []
   classes = []
+  nonempty_without_bbox = 0
   for annotation in annotations:
     (x, y, bbox_width, bbox_height) = tuple(annotation['bbox'])
     category_id = annotation['category_id']
@@ -143,8 +158,7 @@ def create_tf_example(image,
       bbox_height = orig_height - y
 
     if FLAGS.label_type=='empty':
-      origin_category_text = original_category_index[category_id]['name']
-      if origin_category_text in FLAGS.empty_classes_list:
+      if _should_skip_class_from_empty(category_id, original_category_index):
         num_annotations_skipped += 1
         num_empty_annotations_skipped += 1
         continue
@@ -158,6 +172,24 @@ def create_tf_example(image,
     ymins.append(float(y) / orig_height)
     ymaxs.append(float(y + bbox_height) / orig_height)
 
+  # if a nonempty image without bboxes is found, we add a bbox covering the
+  # entire image to the list and mark image as nonempty_without_bbox
+  if image['category'] != 0 and len(classes) == 0 \
+        and not _should_skip_class_from_empty(image['category'],
+                                              original_category_index):
+    if FLAGS.keep_nonempty_without_bbox:
+      if FLAGS.label_type=='empty':
+        category_id = int(FLAGS.nonempty_category_id)
+        classes_text.append(category_index[category_id]['name'].encode('utf8'))
+        classes.append(category_id)
+        xmins.append(float(0))
+        xmaxs.append(float(0))
+        ymins.append(float(1))
+        ymaxs.append(float(1))
+        nonempty_without_bbox = 1
+    else:
+      return None, num_annotations_skipped, num_empty_annotations_skipped
+
   tf_example = tf.train.Example(features=tf.train.Features(feature={
       'image/height': dataset_util.int64_feature(height),
       'image/width': dataset_util.int64_feature(width),
@@ -167,6 +199,8 @@ def create_tf_example(image,
       'image/key/sha256': dataset_util.bytes_feature(key.encode('utf8')),
       'image/encoded': dataset_util.bytes_feature(encoded_image_data),
       'image/format': dataset_util.bytes_feature('jpeg'.encode('utf8')),
+      'image/nonempty_without_bbox':
+          dataset_util.int64_feature(nonempty_without_bbox),
       'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
       'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
       'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
@@ -185,6 +219,9 @@ def create_tf_record_from_images_list(images,
                                       images_metadata_index,
                                       output_path):
   num_shards = 1 + (len(images) // FLAGS.images_per_shard)
+  if num_shards > MAX_NUMBER_OF_SHARDS:
+    num_shards = MAX_NUMBER_OF_SHARDS
+
   total_annot_skipped = 0
   total_empty_annot_skipped = 0
   total_image_skipped = 0
@@ -194,7 +231,7 @@ def create_tf_record_from_images_list(images,
         tf_record_close_stack, output_path, num_shards)
 
     for index, image in enumerate(images):
-      image_id = image[:-4]
+      image_id = image['file_name'][:-4]
       if image_id not in annotations_index:
         annotations_index[image_id] = []
       if image_id in images_metadata_index:
@@ -230,7 +267,7 @@ def _get_serengeti_images_by_split(serengeti_images_file):
 
   images_per_split = {}
   for split in images.split.unique():
-    images_per_split[split] = list(images[images.split == split].file_name)
+    images_per_split[split] = images[images.split == split].to_dict('records')
 
   return images_per_split
 
