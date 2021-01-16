@@ -14,6 +14,10 @@
 r""" Tool to export detector from a savedModel to TFLite
 
 If you get an error during the process, install the package tf-nightly
+
+For models from TensorFlow Object Detection API, it's recommended to export the
+SavedModel using the script export_tflite_graph_tf2.py which provides some
+options to optimize model such as limiting the number of detections.
 """
 
 from absl import app
@@ -27,7 +31,8 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string(
     'exported_model_path', default=None,
     help=('Path to the directory containing exported files for the detection'
-          ' model using the script exporter_main_v2.py')
+          ' model using the script exporter_main_v2.py including "saved_model"'
+          ' folder.')
 )
 
 flags.DEFINE_string(
