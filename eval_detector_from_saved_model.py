@@ -118,6 +118,9 @@ def _save_predictions_to_csv(file_names, labels, predictions):
     'predictions': predictions
   }
 
+  if not os.path.exists(os.path.dirname(FLAGS.predictions_csv_file)):
+    os.makedirs(os.path.dirname(FLAGS.predictions_csv_file))
+
   df = pd.DataFrame.from_dict(preds, orient='index').transpose()
   df.to_csv(FLAGS.predictions_csv_file, index=False)
 
@@ -151,7 +154,7 @@ def _detect_poi_agnostic(model, dataset):
     count += 1
 
   if FLAGS.predictions_csv_file is not None:
-    _save_predictions_to_csv(file_names, labels, detection_confidence)
+    _save_predictions_to_csv(file_names, labels, detection_confidences)
 
   return labels, predictions, detection_confidences
 

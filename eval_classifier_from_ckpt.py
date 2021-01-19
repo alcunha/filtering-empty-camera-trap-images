@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
 from absl import app
 from absl import flags
 from sklearn.metrics import (accuracy_score, confusion_matrix,
@@ -106,6 +108,9 @@ def _save_predictions_to_csv(file_names, labels, predictions):
     'predictions': predictions
   }
 
+  if not os.path.exists(os.path.dirname(FLAGS.predictions_csv_file)):
+    os.makedirs(os.path.dirname(FLAGS.predictions_csv_file))
+
   df = pd.DataFrame.from_dict(preds, orient='index').transpose()
   df.to_csv(FLAGS.predictions_csv_file, index=False)
 
@@ -116,7 +121,7 @@ def predict_binary_classifier(model, dataset):
   file_names = []
   labels = []
   predictions = []
-  detection_confidence = []
+  detection_confidences = []
   count = 0
 
   for batch, metadata in dataset:
@@ -125,16 +130,16 @@ def predict_binary_classifier(model, dataset):
     labels.append(_decode_one_hot(label[0]))
     file_names.append(file_name[0].numpy())
     predictions.append(_decode_one_hot(prediction[0]))
-    detection_confidence.append(prediction[0].numpy()[1])
+    detection_confidences.append(prediction[0].numpy()[1])
 
     if count % FLAGS.log_frequence == 0:
       tf.compat.v1.logging.info('Finished eval step %d' % count)
     count += 1
 
   if FLAGS.predictions_csv_file is not None:
-    _save_predictions_to_csv(file_names, labels, detection_confidence)
+    _save_predictions_to_csv(file_names, labels, detection_confidences)
 
-  return labels, predictions, detection_confidence
+  return labels, predictions, detection_confidences
 
 def eval_binary_classifier(model, dataset):
   labels, predictions, probas_pred = predict_binary_classifier(model, dataset)
