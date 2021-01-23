@@ -68,7 +68,7 @@ flags.DEFINE_string(
 )
 
 flags.DEFINE_bool(
-    'resize_with_pad', default=True,
+    'resize_with_pad', default=False,
     help=('Apply padding when resizing image'))
 
 flags.mark_flag_as_required('validation_files')

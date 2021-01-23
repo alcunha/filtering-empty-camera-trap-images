@@ -66,6 +66,10 @@ flags.DEFINE_integer(
     'num_classes', default=2,
     help=('Number of classes for dataset'))
 
+flags.DEFINE_bool(
+    'resize_with_pad', default=False,
+    help=('Apply padding when resizing image'))
+
 flags.mark_flag_as_required('exported_model_path')
 flags.mark_flag_as_required('output_model_file')
 
@@ -87,6 +91,7 @@ def _build_dataset():
       batch_size=BATCH_SIZE,
       is_training=False,
       output_size=FLAGS.input_size,
+      resize_with_pad=FLAGS.resize_with_pad,
       num_classes=FLAGS.num_classes,
     )
   else:
@@ -95,6 +100,7 @@ def _build_dataset():
       batch_size=BATCH_SIZE,
       is_training=False,
       output_size=FLAGS.input_size,
+      resize_with_pad=FLAGS.resize_with_pad,
       num_classes=FLAGS.num_classes,
       num_instances=0,
     )
