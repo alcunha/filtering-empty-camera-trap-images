@@ -67,6 +67,10 @@ flags.DEFINE_string(
     help=('File name to save model predictions.')
 )
 
+flags.DEFINE_bool(
+    'resize_with_pad', default=True,
+    help=('Apply padding when resizing image'))
+
 flags.mark_flag_as_required('validation_files')
 flags.mark_flag_as_required('num_classes')
 flags.mark_flag_as_required('model')
@@ -85,7 +89,7 @@ def build_input_data(input_size):
       batch_size=BATCH_SIZE,
       is_training=False,
       output_size=input_size,
-      resize_with_pad=True,
+      resize_with_pad=FLAGS.resize_with_pad,
       num_classes=FLAGS.num_classes,
       provide_filename=True,
     )
@@ -95,7 +99,7 @@ def build_input_data(input_size):
       batch_size=BATCH_SIZE,
       is_training=False,
       output_size=input_size,
-      resize_with_pad=True,
+      resize_with_pad=FLAGS.resize_with_pad,
       num_classes=FLAGS.num_classes,
       num_instances=0,
       provide_filename=True,
