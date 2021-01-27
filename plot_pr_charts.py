@@ -19,6 +19,7 @@ import collections
 from absl import app
 from absl import flags
 import matplotlib.pyplot as plt
+from sklearn.metrics import auc
 
 import eval_utils
 import utils
@@ -37,6 +38,11 @@ flags.DEFINE_string(
 flags.DEFINE_list(
     'chart_format_list', default=['pdf'],
     help=('List of file formats to save charts on')
+)
+
+flags.DEFINE_bool(
+    'log_pr_auc', default=True,
+    help=('Log Precision-Recall AUC for each model')
 )
 
 flags.mark_flag_as_required('results_patern')
@@ -137,6 +143,11 @@ def _plot_precision_recall_curve(results_df,
              linewidth=1.0)
     count += 1
 
+    if FLAGS.log_pr_auc:
+      print("%s PR AUC: %.3f" % (row.fancy_model_name,
+                                 auc(row.precision_recall_curve[1],
+                                     row.precision_recall_curve[0])))
+
   if no_skill is not None:
     plt.plot([0, 1],
              [no_skill, no_skill],
@@ -168,7 +179,7 @@ def _plot_pr_curve_for_dataset(df, dataset_name):
                                 _calculate_no_skill_model(df, dataset_name),
                                 chart_file_name,
                                 default_models_sorter)
-    
+
     print('Saved chart to %s' % chart_file_name)
 
 def _plot_pr_curve_from_files():
