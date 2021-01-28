@@ -19,6 +19,7 @@ import collections
 from absl import app
 from absl import flags
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.metrics import auc
 
 import eval_utils
@@ -48,6 +49,11 @@ flags.DEFINE_bool(
 flags.DEFINE_bool(
     'show_random_guess', default=False,
     help=('Show line for random guess')
+)
+
+flags.DEFINE_multi_float(
+    'threshold_dots', default=None,
+    help=('Include dots for thrsholds on chart')
 )
 
 flags.mark_flag_as_required('results_patern')
@@ -125,6 +131,17 @@ def _sort_models_by_list(df, models_sorter):
 
   return df.sort_values(["fancy_model_name"])
 
+def _get_pr_point_at_threshold(precision_recall_curve, thresholds):
+  x = []
+  y = []
+
+  for thres in thresholds:
+    pos = len(np.argwhere(precision_recall_curve[2] < thres))
+    x.append(precision_recall_curve[1][pos])
+    y.append(precision_recall_curve[0][pos])
+
+  return x, y
+
 def _plot_precision_recall_curve(results_df,
                                  no_skill=None,
                                  file_name=None,
@@ -147,6 +164,16 @@ def _plot_precision_recall_curve(results_df,
              color=color,
              linewidth=1.2)
     count += 1
+
+    if FLAGS.threshold_dots is not None:
+      x, y = _get_pr_point_at_threshold(row.precision_recall_curve,
+                                        FLAGS.threshold_dots)
+      plt.plot(x, y, 'o', color=color)
+      for i, label in enumerate(FLAGS.threshold_dots):
+        plt.annotate(str(label),
+                     (x[i], y[i]),
+                     xytext=(x[i] + 0.01, y[i] + 0.01),
+                     fontsize=8)
 
     if FLAGS.log_pr_auc:
       print("%s PR AUC: %.3f" % (row.fancy_model_name,
