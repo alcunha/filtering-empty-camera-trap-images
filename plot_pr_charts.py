@@ -46,6 +46,11 @@ flags.DEFINE_bool(
     help=('Log Precision-Recall AUC for each model')
 )
 
+flags.DEFINE_multi_float(
+    'log_prec_at_pr', default=None,
+    help=('Log Precision at Recall levels')
+)
+
 flags.DEFINE_bool(
     'show_random_guess', default=False,
     help=('Show line for random guess')
@@ -136,11 +141,18 @@ def _get_pr_point_at_threshold(precision_recall_curve, thresholds):
   y = []
 
   for thres in thresholds:
-    pos = len(np.argwhere(precision_recall_curve[2] < thres))
+    pos = np.max(np.argwhere(precision_recall_curve[2] < thres))
     x.append(precision_recall_curve[1][pos])
     y.append(precision_recall_curve[0][pos])
 
   return x, y
+
+def _log_prec_at_recall(precision_recall_curve, recalls):
+  for rec in recalls:
+    pos = np.max(np.argwhere(precision_recall_curve[1] >= rec))
+    print("Recall: %f (%.2f), Precision: %f, Thereshold: %f" % \
+        (precision_recall_curve[1][pos], rec, precision_recall_curve[0][pos],
+         precision_recall_curve[2][pos]))
 
 def _plot_precision_recall_curve(results_df,
                                  no_skill=None,
@@ -179,6 +191,9 @@ def _plot_precision_recall_curve(results_df,
       print("%s PR AUC: %.3f" % (row.fancy_model_name,
                                  auc(row.precision_recall_curve[1],
                                      row.precision_recall_curve[0])))
+    
+    if FLAGS.log_prec_at_pr is not None:
+      _log_prec_at_recall(row.precision_recall_curve, FLAGS.log_prec_at_pr)
 
   if no_skill is not None:
     plt.plot([0, 1],
@@ -192,8 +207,8 @@ def _plot_precision_recall_curve(results_df,
     legend = plt.legend(loc='lower left')
   plt.xlim(0.0, 1.00)
   plt.ylim(0.0, 1.05)
-  plt.xlabel('Recall')
-  plt.ylabel('Precision')
+  plt.xlabel('Revocação')
+  plt.ylabel('Precisão')
 
   if file_name is not None:
     plt.savefig(file_name,
