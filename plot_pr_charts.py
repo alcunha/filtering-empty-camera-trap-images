@@ -45,6 +45,11 @@ flags.DEFINE_bool(
     help=('Log Precision-Recall AUC for each model')
 )
 
+flags.DEFINE_bool(
+    'show_random_guess', default=False,
+    help=('Show line for random guess')
+)
+
 flags.mark_flag_as_required('results_patern')
 flags.mark_flag_as_required('charts_path')
 
@@ -140,7 +145,7 @@ def _plot_precision_recall_curve(results_df,
              label=row.fancy_model_name,
              linestyle=linestyle,
              color=color,
-             linewidth=1.0)
+             linewidth=1.2)
     count += 1
 
     if FLAGS.log_pr_auc:
@@ -153,10 +158,11 @@ def _plot_precision_recall_curve(results_df,
              [no_skill, no_skill],
              linestyle='--',
              color='gainsboro',
-             linewidth=1.0,
-             label='No Skill')
-
-  legend = plt.legend(loc='upper left', bbox_to_anchor=(1.05, 1))
+             linewidth=1.2,
+             label='Random guess')
+    legend = plt.legend(loc='upper left', bbox_to_anchor=(1.05, 1))
+  else:
+    legend = plt.legend(loc='lower left')
   plt.xlim(0.0, 1.00)
   plt.ylim(0.0, 1.05)
   plt.xlabel('Recall')
@@ -175,8 +181,13 @@ def _plot_pr_curve_for_dataset(df, dataset_name):
     chart_file_name = utils.get_valid_filename(chart_file_name)
     chart_file_name = os.path.join(FLAGS.charts_path, chart_file_name)
 
+    if FLAGS.show_random_guess:
+      no_skill_model = _calculate_no_skill_model(df, dataset_name)
+    else:
+      no_skill_model = None
+
     _plot_precision_recall_curve(df[df.fancy_dataset_name == dataset_name],
-                                _calculate_no_skill_model(df, dataset_name),
+                                no_skill_model,
                                 chart_file_name,
                                 default_models_sorter)
 
