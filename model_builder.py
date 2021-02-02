@@ -17,6 +17,8 @@ import collections
 import tensorflow as tf
 import tensorflow_hub as hub
 
+from utils import is_number
+
 ModelSpecs = collections.namedtuple("ModelSpecs", [
     'uri', 'type', 'input_size', 'classes', 'activation'
   ])
@@ -72,10 +74,24 @@ def _create_model_from_hub(specs, seed=None):
 
   return model
 
-def _create_model_from_keras(specs, seed=None):
+def _get_mobilenet_params(model_name):
+  alpha = 1.0
+  params_list = model_name.split('_')
+
+  if len(params_list) > 1:
+    for param in params_list[1:]:
+      if param.startswith('a') and is_number(param[1:]):
+        alpha = float(param[1:])
+
+  return alpha
+
+def _create_model_from_keras(specs, model_name, seed=None):
   if specs.uri == 'mobilenetv2':
+    alpha = _get_mobilenet_params(model_name)
+
     base_model = tf.keras.applications.MobileNetV2(
       input_shape=(specs.input_size, specs.input_size, 3),
+      alpha=alpha,
       include_top=False,
       weights='imagenet'
     )
@@ -91,11 +107,11 @@ def _create_model_from_keras(specs, seed=None):
 
   return model
 
-def _create_model_from_specs(specs, seed=None):
+def _create_model_from_specs(specs, model_name, seed=None):
   if specs.type == 'tfhub':
     return _create_model_from_hub(specs, seed)
   else:
-    return _create_model_from_keras(specs, seed)
+    return _create_model_from_keras(specs, model_name, seed)
 
 def create(model_name,
            num_classes,
@@ -103,10 +119,12 @@ def create(model_name,
            classifier_activation="softmax",
            seed=None):
 
-  if model_name not in MODELS_SPECS.keys():
-    raise RuntimeError('Model %s not implemented' % model_name)
+  model_name_base = model_name.split('_')[0]
 
-  specs = MODELS_SPECS[model_name]
+  if model_name_base not in MODELS_SPECS.keys():
+    raise RuntimeError('Model %s not implemented' % model_name_base)
+
+  specs = MODELS_SPECS[model_name_base]
   specs = specs._replace(
     classes=num_classes,
     activation=classifier_activation,
@@ -114,4 +132,4 @@ def create(model_name,
   if input_size is not None:
     specs = specs._replace(input_size=input_size)
 
-  return _create_model_from_specs(specs, seed)
+  return _create_model_from_specs(specs, model_name, seed)

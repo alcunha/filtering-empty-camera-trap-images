@@ -26,3 +26,10 @@ def get_valid_filename(file_name):
   file_name = re.sub(r'\s', '-', file_name)
 
   return file_name
+
+def is_number(text):
+  try:
+    float(text)
+    return True
+  except ValueError:
+    return False
