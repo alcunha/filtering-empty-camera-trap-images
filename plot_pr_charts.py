@@ -73,12 +73,9 @@ model_names = {'efficientdet-d0': 'EfficientDet-D0',
                'efficientnet-b0': 'EfficientNet-B0',
                'efficientnet-b3': 'EfficientNet-B3',
                'mobilenetv2': 'MobileNetV2',
+               'mobilenetv2_a0.50': 'MobileNetV2-0.50',
+               'mobilenetv2_a0.75': 'MobileNetV2-0.75',
                'ssdlite-mobilenetv2': 'SSDLite+MobileNetV2'}
-
-dataset_names = {'caltech_val': 'Caltech',
-                 'ss_event_val': 'Snapshot Serengeti (Event)',
-                 'ss_site_val': 'Snapshot Serengeti (Site)',
-                 'ss_time_val': 'Snapshot Serengeti (Time)'}
 
 default_model_resolutions = {'efficientdet-d0': 512,
                              'efficientnet-b0': 224,
@@ -89,6 +86,8 @@ default_model_resolutions = {'efficientdet-d0': 512,
 default_models_sorter = ['EfficientNet-B0 (224)',
                          'EfficientNet-B3 (300)',
                          'MobileNetV2 (224)',
+                         'MobileNetV2-0.50 (320)',
+                         'MobileNetV2-0.75 (320)',
                          'MobileNetV2 (320)',
                          'SSDLite+MobileNetV2 (320)',
                          'EfficientDet-D0 (512)']
@@ -113,17 +112,14 @@ def _get_resolution_from_ckp_name(model, ckp_name):
 
   return resolution
 
-def _get_dataset_from_results_filename(filename):
-  dataset_name = filename.split('/')[-1]
-  dataset_name = dataset_name[:-len('.pickle')]
+def _get_test_set_id_from_results_filename(filename):
+  test_set_id = filename.split('/')[-1]
+  test_set_id = test_set_id.split('.')[0]
 
-  if dataset_name in dataset_names.keys():
-    dataset_name = dataset_names[dataset_name]
+  return test_set_id
 
-  return dataset_name
-
-def _calculate_no_skill_model(df, dataset_name):
-  df = df[df.fancy_dataset_name == dataset_name]
+def _calculate_no_skill_model(df, test_set_id):
+  df = df[df.test_set_id == test_set_id]
   qty_class0 = df.precision_recall_f1_per_class.iloc[0][3][0]
   qty_class1 = df.precision_recall_f1_per_class.iloc[0][3][1]
 
@@ -191,7 +187,7 @@ def _plot_precision_recall_curve(results_df,
       print("%s PR AUC: %.3f" % (row.fancy_model_name,
                                  auc(row.precision_recall_curve[1],
                                      row.precision_recall_curve[0])))
-    
+
     if FLAGS.log_prec_at_pr is not None:
       _log_prec_at_recall(row.precision_recall_curve, FLAGS.log_prec_at_pr)
 
@@ -216,19 +212,19 @@ def _plot_precision_recall_curve(results_df,
                 bbox_extra_artists=(legend,),
                 bbox_inches='tight')
 
-def _plot_pr_curve_for_dataset(df, dataset_name):
+def _plot_pr_curve_for_dataset(df, test_set_id):
 
   for file_format in FLAGS.chart_format_list:
-    chart_file_name = dataset_name + '.' + file_format
+    chart_file_name = test_set_id + '.' + file_format
     chart_file_name = utils.get_valid_filename(chart_file_name)
     chart_file_name = os.path.join(FLAGS.charts_path, chart_file_name)
 
     if FLAGS.show_random_guess:
-      no_skill_model = _calculate_no_skill_model(df, dataset_name)
+      no_skill_model = _calculate_no_skill_model(df, test_set_id)
     else:
       no_skill_model = None
 
-    _plot_precision_recall_curve(df[df.fancy_dataset_name == dataset_name],
+    _plot_precision_recall_curve(df[df.test_set_id == test_set_id],
                                 no_skill_model,
                                 chart_file_name,
                                 default_models_sorter)
@@ -245,11 +241,11 @@ def _plot_pr_curve_from_files():
   results_df['fancy_model_name'] = results_df.apply(
       lambda row: _format_model_name(row.model_name, row.resolution), axis=1)
 
-  results_df['fancy_dataset_name'] = results_df.apply(
-      lambda row: _get_dataset_from_results_filename(row.file_name), axis=1)
+  results_df['test_set_id'] = results_df.apply(
+      lambda row: _get_test_set_id_from_results_filename(row.file_name), axis=1)
 
-  for dataset_name in results_df.fancy_dataset_name.unique():
-    _plot_pr_curve_for_dataset(results_df, dataset_name)
+  for test_set_id in results_df.test_set_id.unique():
+    _plot_pr_curve_for_dataset(results_df, test_set_id)
 
 def main(_):
   _plot_pr_curve_from_files()
