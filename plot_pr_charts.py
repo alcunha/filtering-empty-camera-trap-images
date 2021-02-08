@@ -150,13 +150,10 @@ def _log_prec_at_recall(precision_recall_curve, recalls):
         (precision_recall_curve[1][pos], rec, precision_recall_curve[0][pos],
          precision_recall_curve[2][pos]))
 
-def _plot_precision_recall_curve(results_df,
-                                 no_skill=None,
-                                 file_name=None,
-                                 models_sorter=None):
-
-  if models_sorter is not None:
-    results_df = _sort_models_by_list(results_df, models_sorter)
+def _plot_precision_recall_curve(df,
+                                 test_set_id):
+  results_df = df[df.test_set_id == test_set_id]
+  results_df = _sort_models_by_list(results_df, default_models_sorter)
 
   plt.figure(figsize=(4,4))
   count = 0
@@ -191,7 +188,8 @@ def _plot_precision_recall_curve(results_df,
     if FLAGS.log_prec_at_pr is not None:
       _log_prec_at_recall(row.precision_recall_curve, FLAGS.log_prec_at_pr)
 
-  if no_skill is not None:
+  if FLAGS.show_random_guess:
+    no_skill = _calculate_no_skill_model(df, test_set_id)
     plt.plot([0, 1],
              [no_skill, no_skill],
              linestyle='--',
@@ -206,29 +204,15 @@ def _plot_precision_recall_curve(results_df,
   plt.xlabel('Revocação')
   plt.ylabel('Precisão')
 
-  if file_name is not None:
-    plt.savefig(file_name,
-                dpi=600,
-                bbox_extra_artists=(legend,),
-                bbox_inches='tight')
-
-def _plot_pr_curve_for_dataset(df, test_set_id):
-
   for file_format in FLAGS.chart_format_list:
     chart_file_name = test_set_id + '.' + file_format
     chart_file_name = utils.get_valid_filename(chart_file_name)
     chart_file_name = os.path.join(FLAGS.charts_path, chart_file_name)
 
-    if FLAGS.show_random_guess:
-      no_skill_model = _calculate_no_skill_model(df, test_set_id)
-    else:
-      no_skill_model = None
-
-    _plot_precision_recall_curve(df[df.test_set_id == test_set_id],
-                                no_skill_model,
-                                chart_file_name,
-                                default_models_sorter)
-
+    plt.savefig(chart_file_name,
+                dpi=600,
+                bbox_extra_artists=(legend,),
+                bbox_inches='tight')
     print('Saved chart to %s' % chart_file_name)
 
 def _plot_pr_curve_from_files():
@@ -245,7 +229,7 @@ def _plot_pr_curve_from_files():
       lambda row: _get_test_set_id_from_results_filename(row.file_name), axis=1)
 
   for test_set_id in results_df.test_set_id.unique():
-    _plot_pr_curve_for_dataset(results_df, test_set_id)
+    _plot_precision_recall_curve(results_df, test_set_id)
 
 def main(_):
   _plot_pr_curve_from_files()
