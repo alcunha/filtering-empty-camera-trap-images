@@ -20,6 +20,7 @@ from absl import app
 from absl import flags
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from sklearn.metrics import auc
 
 import eval_utils
@@ -41,24 +42,18 @@ flags.DEFINE_list(
     help=('List of file formats to save charts on')
 )
 
-flags.DEFINE_bool(
-    'log_pr_auc', default=True,
-    help=('Log Precision-Recall AUC for each model')
-)
-
 flags.DEFINE_multi_float(
     'log_prec_at_pr', default=None,
     help=('Log Precision at Recall levels')
 )
 
+flags.DEFINE_string(
+    'results_metrics_csv_name', default=None,
+    help=('Name to the csv file where metrics will be saved on'))
+
 flags.DEFINE_bool(
     'show_random_guess', default=False,
     help=('Show line for random guess')
-)
-
-flags.DEFINE_multi_float(
-    'threshold_dots', default=None,
-    help=('Include dots for thrsholds on chart')
 )
 
 flags.mark_flag_as_required('results_patern')
@@ -132,24 +127,6 @@ def _sort_models_by_list(df, models_sorter):
 
   return df.sort_values(["fancy_model_name"])
 
-def _get_pr_point_at_threshold(precision_recall_curve, thresholds):
-  x = []
-  y = []
-
-  for thres in thresholds:
-    pos = np.max(np.argwhere(precision_recall_curve[2] < thres))
-    x.append(precision_recall_curve[1][pos])
-    y.append(precision_recall_curve[0][pos])
-
-  return x, y
-
-def _log_prec_at_recall(precision_recall_curve, recalls):
-  for rec in recalls:
-    pos = np.max(np.argwhere(precision_recall_curve[1] >= rec))
-    print("Recall: %f (%.2f), Precision: %f, Thereshold: %f" % \
-        (precision_recall_curve[1][pos], rec, precision_recall_curve[0][pos],
-         precision_recall_curve[2][pos]))
-
 def _plot_precision_recall_curve(df,
                                  test_set_id):
   results_df = df[df.test_set_id == test_set_id]
@@ -169,24 +146,6 @@ def _plot_precision_recall_curve(df,
              color=color,
              linewidth=1.2)
     count += 1
-
-    if FLAGS.threshold_dots is not None:
-      x, y = _get_pr_point_at_threshold(row.precision_recall_curve,
-                                        FLAGS.threshold_dots)
-      plt.plot(x, y, 'o', color=color)
-      for i, label in enumerate(FLAGS.threshold_dots):
-        plt.annotate(str(label),
-                     (x[i], y[i]),
-                     xytext=(x[i] + 0.01, y[i] + 0.01),
-                     fontsize=8)
-
-    if FLAGS.log_pr_auc:
-      print("%s PR AUC: %.3f" % (row.fancy_model_name,
-                                 auc(row.precision_recall_curve[1],
-                                     row.precision_recall_curve[0])))
-
-    if FLAGS.log_prec_at_pr is not None:
-      _log_prec_at_recall(row.precision_recall_curve, FLAGS.log_prec_at_pr)
 
   if FLAGS.show_random_guess:
     no_skill = _calculate_no_skill_model(df, test_set_id)
@@ -215,7 +174,46 @@ def _plot_precision_recall_curve(df,
                 bbox_inches='tight')
     print('Saved chart to %s' % chart_file_name)
 
-def _plot_pr_curve_from_files():
+def _calculate_results(row):
+  results = {}
+  results['fancy_model_name'] = row.fancy_model_name
+  results['test_set_id'] = row.test_set_id
+
+  pr_curve = row.precision_recall_curve
+  num_empty = row.precision_recall_f1_per_class[3][0]
+  num_nonempty = row.precision_recall_f1_per_class[3][1]
+
+  results['pr_auc'] = auc(pr_curve[1], pr_curve[0])
+
+  if FLAGS.log_prec_at_pr is not None:
+    for rec in FLAGS.log_prec_at_pr:
+      pos = np.max(np.argwhere(pr_curve[1] >= rec))
+      recall = pr_curve[1][pos]
+      precision = pr_curve[0][pos]
+      threshold = pr_curve[2][pos]
+
+      true_positive = int(rec*num_nonempty)
+      false_positive = int(true_positive/precision) - true_positive
+      true_negative = num_empty - false_positive
+      true_negative_rate = true_negative/num_empty
+
+      results['prec_%drec' % int(100*rec)] = precision
+      results['rec_%drec' % int(100*rec)] = recall
+      results['thres_%drec' % int(100*rec)] = threshold
+      results['tnr_%drec' % int(100*rec)] = true_negative_rate
+
+  return results
+
+def _save_metrics_to_csv(results_df, csv_file):
+  results = []
+  for _, row in results_df.iterrows():
+    results.append(_calculate_results(row))
+
+  df = pd.DataFrame(results)
+  df.to_csv(csv_file, index=False)
+  print('Saved csv results to %s' % (csv_file))
+
+def _process_results_from_files():
   results_df = eval_utils.load_results_to_df(FLAGS.results_patern)
 
   results_df['resolution'] = results_df.apply(
@@ -231,8 +229,11 @@ def _plot_pr_curve_from_files():
   for test_set_id in results_df.test_set_id.unique():
     _plot_precision_recall_curve(results_df, test_set_id)
 
+  if FLAGS.results_metrics_csv_name is not None:
+    _save_metrics_to_csv(results_df, FLAGS.results_metrics_csv_name)
+
 def main(_):
-  _plot_pr_curve_from_files()
+  _process_results_from_files()
 
 if __name__ == '__main__':
   app.run(main)
