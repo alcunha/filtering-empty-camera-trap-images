@@ -1,4 +1,4 @@
-# microdetector
+# Filtering Empty Camera Trap Images in Embedded Systems
 
 ### Datasets
 
