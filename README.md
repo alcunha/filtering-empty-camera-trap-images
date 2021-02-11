@@ -1,5 +1,9 @@
 # Filtering Empty Camera Trap Images in Embedded Systems
 
+This is the origin TensorFlow implementation for: [Filtering Empty Camera Trap Images in Embedded Systems]()
+
+### Requirements
+
 ### Datasets
 
 [Caltech](http://lila.science/datasets/caltech-camera-traps) and [Snapshot Serengeti](http://lila.science/datasets/snapshot-serengeti) Datasets can be downloaded from [Lila](http://lila.science/).
@@ -11,6 +15,16 @@ For caltech, we only used a [subset](https://drive.google.com/file/d/1aMcP5aDhBT
 For Snapshot Serengeti, we also split the dataset regarding time (seasons) and capture events (bursts). The list of images used for each partition can be found [here](https://drive.google.com/drive/folders/1yGNmigERn1N3pWQ45-jJLKE8aIkLtJaQ?usp=sharing).
 
 We also provide scripts for resizing images and convert dataset to tfrecords format. See `dataset_tools` folder.
+
+### Training
+
+#### Classifiers
+
+#### Detectors
+
+### Evaluation
+
+### Results
 
 ### Classifiers
 Model name | Input size | Dataset | Accuracy | Precision (nonempty) | Recall (nonempty)
@@ -67,6 +81,10 @@ SSD MobileNetV2 FPNLite (Quantized) | 320x320 | 577.993 ± 4.393 | 13.6055
 
 DNR = Did not run
 
-## License
+### Contact
+
+If you have any questions, feel free to contact Fagner Cunha (e-mail: fagner.cunha@icomp.ufam.edu.br) or Github issues. 
+
+### License
 
 [Apache License 2.0](LICENSE)
