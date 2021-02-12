@@ -91,6 +91,9 @@ To measure latency on Raspberry Pi, download the [TensorFlow Lite benchmark tool
 
 ### Results
 
+#### Precision-Recall Curves
+![Precision-Recall Curves](data/pr_curves.png?raw=true)
+
 ### Classifiers
 Model name | Input size | Dataset | Accuracy | Precision (nonempty) | Recall (nonempty)
 -----------|------------|---------|----------|----------------------|------------------
