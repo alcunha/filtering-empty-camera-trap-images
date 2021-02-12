@@ -4,7 +4,7 @@ This is the origin TensorFlow implementation for: [Filtering Empty Camera Trap I
 
 ### Requirements
 
-Prepare an environment with python=3.8, tensorflow==2.3.1, and install the [TensorFlow Object Detection API](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md).
+Prepare an environment with python=3.8, tensorflow=2.3.1, and install the [TensorFlow Object Detection API](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md).
 
 Dependencies can be installed using the following command:
 ```bash
@@ -27,7 +27,38 @@ We also provide scripts for resizing images and convert dataset to tfrecords for
 
 #### Classifiers
 
+To train a classifier use the following command:
+```bash
+python main.py --training_files=PATH_TO_BE_CONFIGURED/caltech_train.record-?????-of-00068 \
+    --num_training_instances=40606 \
+    --validation_files=PATH_TO_BE_CONFIGURED/caltech_val_dev.record-?????-of-00012 \
+    --num_validation_instances=6701 \
+    --num_classes=2 \
+    --model_name=mobilenetv2 \
+    --input_size=224 \
+    --input_scale_mode=tf_mode \
+    --batch_size=128 \
+    --lr=0.01 \
+    --epochs=10 \
+    --randaug_num_layers=2 \
+    --randaug_magnitude=2 \
+    --random_seed=42
+```
+
+For more parameter information please refer to `main.py`. See `configs` folder for some training configs examples.
+
 #### Detectors
+
+To train a detector use the following script from TensorFlow Object Detection API:
+```bash
+# From the tensorflow/models/research/ directory
+python object_detection/model_main_tf2.py \
+    --pipeline_config_path=PATH_TO_BE_CONFIGURED/ssd_efficientdet_d0_512x512_serengeti_agnostic.config \
+    --model_dir=PATH_TO_BE_CONFIGURED/efficientdet_d0_serengeti_site_agnostic_12jan \
+    --alsologtostderr
+```
+
+See `configs` folder for detectors training config files.
 
 ### Evaluation
 
