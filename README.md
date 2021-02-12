@@ -4,6 +4,13 @@ This is the origin TensorFlow implementation for: [Filtering Empty Camera Trap I
 
 ### Requirements
 
+Prepare an environment with python=3.8, tensorflow==2.3.1, and install the [TensorFlow Object Detection API](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2.md).
+
+Dependencies can be installed using the following command:
+```bash
+pip install -r requirements.txt
+```
+
 ### Datasets
 
 [Caltech](http://lila.science/datasets/caltech-camera-traps) and [Snapshot Serengeti](http://lila.science/datasets/snapshot-serengeti) Datasets can be downloaded from [Lila](http://lila.science/).
