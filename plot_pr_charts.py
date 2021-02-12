@@ -134,10 +134,10 @@ def _plot_precision_recall_curve(df,
 
   plt.figure(figsize=(4,4))
   count = 0
-  color_list = ['darkgrey', 'black']
+  color_list = ["#640f79", "#66d9cf", "#d032a3", "#8138fc",  "#8fda59", 'black']
   linestyle_list = ['dotted', 'dashdot', 'solid']
   for _, row in results_df.iterrows():
-    color = color_list[count % 2]
+    color = color_list[count]
     linestyle = linestyle_list[count // 2]
     plt.plot(row.precision_recall_curve[1],
              row.precision_recall_curve[0],
@@ -160,8 +160,8 @@ def _plot_precision_recall_curve(df,
     legend = plt.legend(loc='lower left')
   plt.xlim(0.0, 1.00)
   plt.ylim(0.0, 1.05)
-  plt.xlabel('Revocação')
-  plt.ylabel('Precisão')
+  plt.xlabel('Recall')
+  plt.ylabel('Precision')
 
   for file_format in FLAGS.chart_format_list:
     chart_file_name = test_set_id + '.' + file_format
