@@ -27,7 +27,7 @@ We also provide scripts for resizing images and convert dataset to tfrecords for
 
 #### Classifiers
 
-To train a classifier use the following command:
+To train a classifier use the script `main.py`:
 ```bash
 python main.py --training_files=PATH_TO_BE_CONFIGURED/caltech_train.record-?????-of-00068 \
     --num_training_instances=40606 \
@@ -49,7 +49,7 @@ For more parameter information please refer to `main.py`. See `configs` folder f
 
 #### Detectors
 
-To train a detector use the following script from TensorFlow Object Detection API:
+To train a detector use the following script `object_detection/model_main_tf2.py` from TensorFlow Object Detection API:
 ```bash
 # From the tensorflow/models/research/ directory
 python object_detection/model_main_tf2.py \
@@ -61,6 +61,33 @@ python object_detection/model_main_tf2.py \
 See `configs` folder for detectors training config files.
 
 ### Evaluation
+
+To evaluate a classifier use the script `eval_classifier_from_ckpt.py`:
+```bash
+python eval_classifier_from_ckpt.py --model_name=mobilenetv2 \
+    --input_size=320 \
+    --num_classes=2 \
+    --input_scale_mode=tf_mode \
+    --ckpt_dir=PATH_TO_BE_CONFIGURED/mobilenet_v2_320_caltech_agnostic_19nov \
+    --validation_files=PATH_TO_BE_CONFIGURED/caltech_val_small.record-?????-of-00009
+```
+
+To evaluate a detector as classifier use the script `eval_detector_from_saved_model.py`:
+```bash
+python eval_detector_from_saved_model.py \
+    --exported_model_path=PATH_TO_BE_CONFIGURED/ssdlite_mobilenetv2_320_caltech_agnostic_19nov_exported \
+    --model_name=ssdlite-mobilenetv2 \
+    --num_classes=2 \
+    --input_scale_mode=uint8 \
+    --validation_files=PATH_TO_BE_CONFIGURED/caltech_val_small.record-?????-of-00009
+```
+
+For more evaluation options refer to files starting with `eval_`.
+
+To measure latency on Raspberry Pi, download the [TensorFlow Lite benchmark tool](https://www.tensorflow.org/lite/performance/measurement) for ARM, upload this tool and the TFLite model to Raspberry Pi, and run the command:
+```bash
+./linux_arm_benchmark_model --num_runs=50 --graph=model.tflite
+```
 
 ### Results
 
