@@ -17,7 +17,7 @@ pip install -r requirements.txt
 
 We used the recommended Lila train/val partitions for splits based on locations (site).The hyperparameters were tuned using a val_dev split from the train split of each data set.
 
-For caltech, we only used a [subset](https://drive.google.com/file/d/1aMcP5aDhBTBXrpkog8_TTKVxLSvW4DGt/view?usp=sharing) of images containing bounding boxes plus a similar amount of instances sampled from images labeled as empty.
+For Caltech, we only used a [subset](https://drive.google.com/file/d/1aMcP5aDhBTBXrpkog8_TTKVxLSvW4DGt/view?usp=sharing) of images containing bounding boxes plus a similar amount of instances sampled from images labeled as empty.
 
 For Snapshot Serengeti, we also split the dataset regarding time (seasons) and capture events (bursts). The list of images used for each partition can be found [here](https://drive.google.com/drive/folders/1yGNmigERn1N3pWQ45-jJLKE8aIkLtJaQ?usp=sharing).
 
@@ -45,7 +45,7 @@ python main.py --training_files=PATH_TO_BE_CONFIGURED/caltech_train.record-?????
     --random_seed=42
 ```
 
-For more parameter information please refer to `main.py`. See `configs` folder for some training configs examples.
+For more parameter information, please refer to `main.py`. See `configs` folder for some training configs examples.
 
 #### Detectors
 
@@ -72,7 +72,7 @@ python eval_classifier_from_ckpt.py --model_name=mobilenetv2 \
     --validation_files=PATH_TO_BE_CONFIGURED/caltech_val_small.record-?????-of-00009
 ```
 
-To evaluate a detector as classifier use the script `eval_detector_from_saved_model.py`:
+To evaluate a detector as a classifier use the script `eval_detector_from_saved_model.py`:
 ```bash
 python eval_detector_from_saved_model.py \
     --exported_model_path=PATH_TO_BE_CONFIGURED/ssdlite_mobilenetv2_320_caltech_agnostic_19nov_exported \
@@ -82,7 +82,7 @@ python eval_detector_from_saved_model.py \
     --validation_files=PATH_TO_BE_CONFIGURED/caltech_val_small.record-?????-of-00009
 ```
 
-For more evaluation options refer to files starting with `eval_`.
+For more evaluation options, refer to files starting with `eval_`.
 
 To measure latency on Raspberry Pi, download the [TensorFlow Lite benchmark tool](https://www.tensorflow.org/lite/performance/measurement) for ARM, upload this tool and the TFLite model to Raspberry Pi, and run the command:
 ```bash
@@ -90,6 +90,8 @@ To measure latency on Raspberry Pi, download the [TensorFlow Lite benchmark tool
 ```
 
 ### Results
+
+All model checkpoints and TFLite binary files are available [here](https://drive.google.com/drive/folders/16vQSGJEmbHDbLerut7bRIIoGl8mL-pOZ?usp=sharing).
 
 #### Precision-Recall Curves
 ![Precision-Recall Curves](data/pr_curves.png?raw=true)
@@ -126,7 +128,7 @@ To measure latency on Raspberry Pi, download the [TensorFlow Lite benchmark tool
 | MobileNetV2-320     | 320x320     | SS-Time       | 58.61%    | 86.70% | 0.372     |
 
 
-### Latency* on Raspberry Pi 3
+#### Latency* on Raspberry Pi 3
 
 | Model name           | Input size  | Latency<br>Float | Latency<br>Int8 |
 |----------------------|-------------|---------|---------|
