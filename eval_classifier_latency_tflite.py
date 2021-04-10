@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+r"""Tool to evaluate classifiers latency on edge devices.
+
+Set the environment variable PYTHONHASHSEED to a reproducible value
+before you start the python process to ensure that the model trains
+or infers with reproducibility
+"""
 import os
 import glob
 import time
@@ -26,6 +32,8 @@ try:
   import tensorflow.lite as tfl
 except ImportError:
   import tflite_runtime.interpreter as tfl
+
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 FLAGS = flags.FLAGS
 

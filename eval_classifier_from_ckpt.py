@@ -12,10 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+r"""Tool to evaluate classifiers.
+
+Set the environment variable PYTHONHASHSEED to a reproducible value
+before you start the python process to ensure that the model trains
+or infers with reproducibility
+"""
 import os
+import random
 
 from absl import app
 from absl import flags
+import numpy as np
 from sklearn.metrics import (accuracy_score, confusion_matrix,
     precision_recall_fscore_support, precision_recall_curve)
 import pandas as pd
@@ -23,6 +31,8 @@ import tensorflow as tf
 
 import dataloader
 import eval_utils
+
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 FLAGS = flags.FLAGS
 
@@ -62,8 +72,12 @@ flags.DEFINE_string(
 
 flags.DEFINE_string(
     'predictions_csv_file', default=None,
-    help=('File name to save model predictions.')
-)
+    help=('File name to save model predictions.'))
+
+if 'random_seed' not in list(FLAGS):
+  flags.DEFINE_integer(
+      'random_seed', default=42,
+      help=('Random seed for reproductible experiments'))
 
 flags.mark_flag_as_required('validation_files')
 flags.mark_flag_as_required('ckpt_dir')
@@ -151,7 +165,13 @@ def eval_binary_classifier(model, dataset):
 
   return accuracy, conf_matrix, precision_recall_f1, prec_recall_curve
 
+def set_random_seeds():
+  random.seed(FLAGS.random_seed)
+  np.random.seed(FLAGS.random_seed)
+  tf.random.set_seed(FLAGS.random_seed)
+
 def main(_):
+  set_random_seeds()
   dataset = build_input_data()
   model = eval_utils.load_model_from_checkpoint(FLAGS.model_name,
                                                 FLAGS.num_classes,
