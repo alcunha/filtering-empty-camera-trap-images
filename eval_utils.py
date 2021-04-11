@@ -19,6 +19,7 @@ import pickle
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import tensorflow_model_optimization as tfmot
 
 import model_builder
 import train_image_classifier
@@ -90,12 +91,16 @@ def _initialize_model_optimizer(model, input_size, num_classes):
   model.fit(
     x, y, batch_size=1, epochs=1, steps_per_epoch=fake_steps)
 
-def load_model_from_checkpoint(model_name, num_classes, input_size, ckpt_dir):
+def load_model_from_checkpoint(model_name, num_classes, input_size, ckpt_dir,
+                               quant_aware_train=False):
   model = model_builder.create(
     model_name=model_name,
     num_classes=num_classes,
-    input_size=input_size
-  )
+    input_size=input_size)
+
+  if quant_aware_train:
+    model = tfmot.quantization.keras.quantize_model(model)
+    model.summary()
 
   hparams = train_image_classifier.get_default_hparams()
   optimizer = train_image_classifier.generate_optimizer(hparams)

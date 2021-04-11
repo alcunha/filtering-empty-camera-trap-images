@@ -45,6 +45,10 @@ flags.DEFINE_bool(
     'use_quantization', default=False,
     help=('Apply pos-training quantization during exporting process'))
 
+flags.DEFINE_bool(
+    'quant_aware_train', default=False,
+    help=('Whether the model was trained with quantization aware training'))
+
 flags.DEFINE_string(
     'representative_dataset', default=None,
     help=('A file pattern for TFRecord files OR a CSV file containing the list'
@@ -98,7 +102,8 @@ def convert_to_tflite():
   model = eval_utils.load_model_from_checkpoint(FLAGS.model_name,
                                                 FLAGS.num_classes,
                                                 FLAGS.input_size,
-                                                FLAGS.ckpt_dir)
+                                                FLAGS.ckpt_dir,
+                                                FLAGS.quant_aware_train)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
 

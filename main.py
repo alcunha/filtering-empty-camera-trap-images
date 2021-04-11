@@ -26,6 +26,7 @@ from absl import flags
 
 import numpy as np
 import tensorflow as tf
+import tensorflow_model_optimization as tfmot
 
 import dataloader
 import model_builder
@@ -86,6 +87,14 @@ flags.DEFINE_integer(
 flags.DEFINE_string(
     'model_name', default='efficientnet-b0',
     help=('Model name of the archtecture'))
+
+flags.DEFINE_bool(
+    'quant_aware_train', default=False,
+    help=('Whether to use quantization aware training'))
+
+flags.DEFINE_string(
+    'ckpt_dir', default=None,
+    help=('Path to weights checkpoint to be loaded into the model'))
 
 flags.DEFINE_string(
     'model_dir', default=None,
@@ -180,6 +189,13 @@ def get_model(num_classes):
     input_size=FLAGS.input_size,
     seed=FLAGS.random_seed
   )
+
+  if FLAGS.ckpt_dir is not None: 
+    checkpoint_path = os.path.join(FLAGS.ckpt_dir, "ckp")
+    model.load_weights(checkpoint_path)
+
+  if FLAGS.quant_aware_train:
+    model = tfmot.quantization.keras.quantize_model(model)
 
   return model
 
