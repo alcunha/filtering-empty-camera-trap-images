@@ -15,11 +15,11 @@ pip install -r requirements.txt
 
 [Caltech](http://lila.science/datasets/caltech-camera-traps) and [Snapshot Serengeti](http://lila.science/datasets/snapshot-serengeti) Datasets can be downloaded from [Lila](http://lila.science/).
 
-We used the recommended Lila train/val partitions for splits based on locations (site).The hyperparameters were tuned using a val_dev split from the train split of each data set.
+We used the recommended Lila train/val partitions for splits based on locations (site). The hyperparameters were tuned using a val_dev partition which was split from the train split of each data set.
 
 For Caltech, we only used a [subset](https://drive.google.com/file/d/1aMcP5aDhBTBXrpkog8_TTKVxLSvW4DGt/view?usp=sharing) of images containing bounding boxes plus a similar amount of instances sampled from images labeled as empty.
 
-For Snapshot Serengeti, we also split the dataset regarding time (seasons) and capture events (bursts). The list of images used for each partition can be found [here](https://drive.google.com/drive/folders/1yGNmigERn1N3pWQ45-jJLKE8aIkLtJaQ?usp=sharing).
+For Snapshot Serengeti, we also split the dataset regarding time (seasons). The list of images used for each partition can be found [here](https://drive.google.com/drive/folders/1yGNmigERn1N3pWQ45-jJLKE8aIkLtJaQ?usp=sharing).
 
 We also provide scripts for resizing images and convert dataset to tfrecords format. See `dataset_tools` folder.
 
@@ -42,7 +42,14 @@ python main.py --training_files=PATH_TO_BE_CONFIGURED/caltech_train.record-?????
     --epochs=10 \
     --randaug_num_layers=2 \
     --randaug_magnitude=2 \
+    --model_dir=PATH_TO_BE_CONFIGURED \
     --random_seed=42
+```
+
+The parameters can also be passed using a config file:
+```bash
+python main.py --flagfile=configs/efficientnet_b0_224x224_caltech_agnostic.config \
+    --model_dir=PATH_TO_BE_CONFIGURED
 ```
 
 For more parameter information, please refer to `main.py`. See `configs` folder for some training configs examples.
