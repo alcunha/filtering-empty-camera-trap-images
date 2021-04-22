@@ -1,6 +1,6 @@
 # Filtering Empty Camera Trap Images in Embedded Systems
 
-This is the origin TensorFlow implementation for: [Filtering Empty Camera Trap Images in Embedded Systems]()
+This is the origin TensorFlow implementation for [Filtering Empty Camera Trap Images in Embedded Systems](https://arxiv.org/abs/2104.08859)
 
 ### Requirements
 
@@ -149,6 +149,17 @@ All model checkpoints and TFLite binary files are available [here](https://drive
 | Efficientdet-D0      | 512x512     | 4631ms  | -       |
 
 *The entries show average latency over 50 runs. Results are from models trained on SS-Site, but the latency is similar for the other datasets.
+
+### Citation
+
+If you find this code useful in your research, please consider citing:
+
+    @article{cunha2021filtering,
+        title={Filtering Empty Camera Trap Images in Embedded Systems}, 
+        author={Fagner Cunha and Eulanda M. dos Santos and Raimundo Barreto and Juan G. Colonna},
+        year={2021},
+        journal={arXiv preprint arXiv: 2104.08859}
+    }
 
 ### Contact
 
