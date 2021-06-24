@@ -1,6 +1,6 @@
 # Filtering Empty Camera Trap Images in Embedded Systems
 
-This is the origin TensorFlow implementation for [Filtering Empty Camera Trap Images in Embedded Systems](https://arxiv.org/abs/2104.08859)
+This is the origin TensorFlow implementation for [Filtering Empty Camera Trap Images in Embedded Systems](https://openaccess.thecvf.com/content/CVPR2021W/MAI/html/Cunha_Filtering_Empty_Camera_Trap_Images_in_Embedded_Systems_CVPRW_2021_paper.html)
 
 ### Requirements
 
@@ -154,11 +154,13 @@ All model checkpoints and TFLite binary files are available [here](https://drive
 
 If you find this code useful in your research, please consider citing:
 
-    @article{cunha2021filtering,
-        title={Filtering Empty Camera Trap Images in Embedded Systems}, 
-        author={Fagner Cunha and Eulanda M. dos Santos and Raimundo Barreto and Juan G. Colonna},
-        year={2021},
-        journal={arXiv preprint arXiv: 2104.08859}
+    @InProceedings{Cunha_2021_CVPR,
+        author    = {Cunha, Fagner and dos Santos, Eulanda M. and Barreto, Raimundo and Colonna, Juan G.},
+        title     = {Filtering Empty Camera Trap Images in Embedded Systems},
+        booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Workshops},
+        month     = {June},
+        year      = {2021},
+        pages     = {2438-2446}
     }
 
 ### Contact
